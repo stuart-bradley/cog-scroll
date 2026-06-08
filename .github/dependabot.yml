@@ -1,0 +1,45 @@
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    cooldown:
+      default-days: 30
+    groups:
+      all:
+        patterns:
+          - "*"
+
+  - package-ecosystem: pub
+    directory: /
+    schedule:
+      interval: weekly
+    cooldown:
+      default-days: 30
+    groups:
+      all:
+        patterns:
+          - "*"
+
+  - package-ecosystem: gradle
+    directory: /android
+    schedule:
+      interval: weekly
+    cooldown:
+      default-days: 30
+    groups:
+      all:
+        patterns:
+          - "*"
+
+  - package-ecosystem: bundler
+    directory: /android
+    schedule:
+      interval: weekly
+    cooldown:
+      default-days: 30
+    groups:
+      all:
+        patterns:
+          - "*"

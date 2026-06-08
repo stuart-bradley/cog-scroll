@@ -7,6 +7,10 @@
 .buildlog/
 .history
 
+# IDE
+.idea/
+*.iml
+
 # Generated Dart files
 *.g.dart
 *.freezed.dart
