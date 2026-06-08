@@ -20,7 +20,7 @@ Clone the structure of `tasks-on-time`: `pubspec.yaml` (deps per `SPEC.md` §3.1
 (`ci.yml`, `e2e.yml`, `release.yml`) + `.github/actions/setup-flutter`, `android/` Gradle
 config (carry forward the AGP 9 / `file_picker` 10.x / Kotlin pinning notes),
 `fastlane/Fastfile`, scripts. Set **applicationId `com.stuartbradley.cogscroll`**, display
-name **CogScroll** (confirm both first). Strip all Tasks-on-Time domain code (timers,
+name **CogScroll** (both confirmed). Strip all Tasks-on-Time domain code (timers,
 widgets, notifications-of-timers) — keep only the empty `core/` + `features/` skeleton and a
 runnable `main.dart`.
 *Tests:* `just check` runs green on the empty skeleton; a trivial smoke widget test boots the

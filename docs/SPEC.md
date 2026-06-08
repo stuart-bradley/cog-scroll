@@ -55,7 +55,7 @@ The milestone/issue breakdown lives in [`docs/GITHUB_ISSUES.md`](GITHUB_ISSUES.m
 | US-6 | As a user I get correct/incorrect feedback via motion, never colour. | Correct → stimulus-conforming success motion; wrong → shake. No hue used. | R7 |
 | US-7 | As a user I set a daily reminder time and get a local notification. | Toggling on + setting a time schedules a daily local notification at that time. | R6 |
 | US-8 | As a user I export my progress to a JSON file and re-import it. | Export writes a JSON snapshot; import restores it and the dashboard reflects it. | R6 |
-| US-9 | As a user I redo my baseline (after confirming) and my analytics reset, but my trial/purchase do not. | Confirmed redo clears analytics (incl. `onboarded`) and relaunches onboarding; `trialStart`/`purchased` untouched. | R6,R8 |
+| US-9 | As a user I redo my baseline (after confirming) and my analytics reset, but my trial/purchase do not. | Confirmed redo clears analytics (incl. `onboarded`) and relaunches onboarding; `trialStart`/`purchasedCache` untouched. | R6,R8 |
 | US-10 | As a new user I use everything free for 28 days. | No gating while `elapsed < 28 days` and not purchased. | R8 |
 | US-11 | As a user past 28 days I hit a paywall and can unlock everything forever for £4. | When `expired && !purchased`, a blocking overlay appears; purchase dismisses it permanently. | R8 |
 | US-12 | As a paying user I reinstall / switch device on the same Google account and my unlock restores automatically. | On launch `restorePurchases()` re-grants entitlement with no repurchase. | R8 |
@@ -308,7 +308,7 @@ games (§3.5).
 
 ### 6.1 Purchase — Play-validated, no backend
 
-One **non-consumable** managed product (proposed id `cogscroll_lifetime_unlock`, **£4**).
+One **non-consumable** managed product (id `cogscroll_lifetime_unlock`, **£4**).
 
 - On launch: `InAppPurchase.instance.isAvailable()`; if available, subscribe to
   `purchaseStream` and call `restorePurchases()`. **Google Play is the source of truth** for
@@ -439,14 +439,17 @@ Onboarding baseline · `M6` Adaptive Today session · `M7` Settings + reminders 
 
 ---
 
-## 11. Open items (confirm at M0 scaffold)
+## 11. Confirmed identifiers & remaining open item
 
-- applicationId `com.stuartbradley.cogscroll` (derived from `com.stuartbradley.taskarr`) —
-  permanent once on Play.
-- IAP product id `cogscroll_lifetime_unlock`; price tier **£4** (from `DESIGN.md`).
+**Confirmed** (user sign-off 2026-06-08 — safe to use from M0):
+
+- applicationId **`com.stuartbradley.cogscroll`** (permanent once on Play).
+- IAP product id **`cogscroll_lifetime_unlock`**; price tier **£4**.
 - Display name **CogScroll**.
-- **Daily reminder is a real local notification** (the prototype's reminder is a
-  preference-only stub; the scaffold already supports real `flutter_local_notifications`, so
-  CogScroll implements it for real — US-7).
+- Daily reminder is a **real** local notification (US-7), not the prototype's
+  preference-only stub.
+
+**Still open:**
+
 - App store tile may use a single brand colour (the in-app pure-mono rule is unchanged) —
   open in `DESIGN.md` §9; decide at M9.

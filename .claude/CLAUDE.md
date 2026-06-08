@@ -178,9 +178,9 @@ Secrets: `KEYSTORE_BASE64`, `KEY_ALIAS`, `KEY_PASSWORD`, `STORE_PASSWORD`,
 Flutter is at `~/flutter/bin`. The `justfile` puts it on PATH; otherwise
 `export PATH="$HOME/flutter/bin:$PATH"`.
 
-## Identifiers (confirm at M0 scaffold)
+## Identifiers (confirmed)
 
-- applicationId: `com.stuartbradley.cogscroll` (proposed — permanent once on Play).
+- applicationId: `com.stuartbradley.cogscroll` (permanent once on Play).
 - IAP product id: `cogscroll_lifetime_unlock`; price **£4**.
 - Display name: **CogScroll**.
 
