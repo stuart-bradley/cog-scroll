@@ -1,0 +1,53 @@
+# Miscellaneous
+.DS_Store
+*.class
+*.log
+*.pyc
+*.swp
+.buildlog/
+.history
+
+# Generated Dart files
+*.g.dart
+*.freezed.dart
+
+# Flutter/Dart/Pub related
+**/doc/api/
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+**/generated_plugin_registrant.dart
+.packages
+.pub-preload-cache/
+.pub/
+build/
+flutter_*.png
+linked_*.ds
+unlinked.ds
+unlinked_spec.ds
+
+# Android related
+**/android/**/gradle-wrapper.jar
+.gradle/
+**/android/captures/
+**/android/gradlew
+**/android/gradlew.bat
+**/android/local.properties
+**/android/**/GeneratedPluginRegistrant.java
+**/android/key.properties
+**/android/app/release.keystore
+*.jks
+play-store-key.json
+
+# iOS/XCode related (not targeted yet, kept for future)
+**/ios/**/Pods/
+**/ios/**/xcuserdata
+**/ios/Flutter/Generated.xcconfig
+**/ios/Flutter/ephemeral
+**/ios/Runner/GeneratedPluginRegistrant.*
+
+# Coverage
+coverage/
+
+# Symbols
+app.*.symbols
