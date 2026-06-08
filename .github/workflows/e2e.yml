@@ -1,0 +1,88 @@
+name: E2E
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "lib/**"
+      - "integration_test/**"
+      - "pubspec.*"
+      - ".github/**"
+      - "android/app/**"
+      - "android/*.gradle*"
+      - "android/gradle/**"
+      - "justfile"
+      - "scripts/**"
+  pull_request:
+    branches: [main]
+    paths:
+      - "lib/**"
+      - "integration_test/**"
+      - "pubspec.*"
+      - ".github/**"
+      - "android/app/**"
+      - "android/*.gradle*"
+      - "android/gradle/**"
+      - "justfile"
+      - "scripts/**"
+
+concurrency:
+  group: e2e-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  e2e:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - uses: ./.github/actions/setup-flutter
+
+      - name: Free disk space
+        run: just ci-free-disk
+
+      - name: Enable KVM
+        run: just ci-enable-kvm
+
+      - name: Cache AVD
+        uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
+        id: avd-cache
+        with:
+          path: |
+            ~/.android/avd/*
+            ~/.android/adb*
+          key: avd-api31-x86_64-2g-${{ runner.os }}
+
+      - name: Create AVD and generate snapshot
+        if: steps.avd-cache.outputs.cache-hit != 'true'
+        uses: reactivecircus/android-emulator-runner@e89f39f1abbbd05b1113a29cf4db69e7540cae5a # v2.37.0
+        with:
+          api-level: 31
+          target: google_apis
+          arch: x86_64
+          profile: pixel_6
+          force-avd-creation: false
+          emulator-boot-timeout: 600
+          disk-size: 2G
+          emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim
+          disable-animations: true
+          script: echo "AVD snapshot generated"
+
+      - name: Pre-build debug APK
+        run: just build-debug
+
+      - name: Run E2E tests
+        uses: reactivecircus/android-emulator-runner@e89f39f1abbbd05b1113a29cf4db69e7540cae5a # v2.37.0
+        with:
+          api-level: 31
+          target: google_apis
+          arch: x86_64
+          profile: pixel_6
+          force-avd-creation: false
+          emulator-boot-timeout: 600
+          disk-size: 2G
+          emulator-options: -no-snapshot-save -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim
+          disable-animations: true
+          script: just e2e

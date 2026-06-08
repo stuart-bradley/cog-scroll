@@ -1,0 +1,16 @@
+default_platform(:android)
+
+platform :android do
+  desc "Deploy to Play Store"
+  lane :deploy do
+    upload_to_play_store(
+      track: ENV.fetch("PLAY_STORE_TRACK", "internal"),
+      aab: "../build/app/outputs/bundle/release/app-release.aab",
+      release_status: ENV.fetch("PLAY_STORE_RELEASE_STATUS", "draft"),
+      skip_upload_metadata: true,
+      skip_upload_changelogs: true,
+      skip_upload_images: true,
+      skip_upload_screenshots: true,
+    )
+  end
+end
