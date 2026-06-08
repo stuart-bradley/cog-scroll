@@ -43,8 +43,12 @@ release-build:
 release-deploy:
     ./scripts/release-deploy.sh
 
-# Full release pipeline
+# Full release pipeline (local: verify, then sign/build/deploy)
 release: check release-sign release-build release-deploy
+
+# CI release pipeline: sign/build/deploy only. `just check` runs in a separate
+# secret-free CI step so codegen/tests never see the signing/Play secrets.
+release-ci: release-sign release-build release-deploy
 
 # E2E tests (assumes emulator running)
 e2e:

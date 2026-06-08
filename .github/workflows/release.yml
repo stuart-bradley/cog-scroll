@@ -41,7 +41,13 @@ jobs:
           bundler-cache: true
           working-directory: android
 
-      - name: Verify, sign, build, deploy
+      # Verification runs WITHOUT the signing/Play secrets in scope, so
+      # build_runner codegen and the test suite never see the keystore
+      # passwords or the Play service-account key.
+      - name: Verify
+        run: just check
+
+      - name: Sign, build, and deploy
         env:
           KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
           STORE_PASSWORD: ${{ secrets.STORE_PASSWORD }}
@@ -49,5 +55,7 @@ jobs:
           KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
           PLAY_STORE_JSON_KEY: ${{ secrets.PLAY_STORE_JSON_KEY }}
           PLAY_STORE_TRACK: ${{ inputs.track || 'alpha' }}
-          PLAY_STORE_RELEASE_STATUS: ${{ inputs.release_status || 'completed' }}
-        run: just release
+          # Default to a safe draft on tag pushes (matches the workflow_dispatch
+          # input default and the Fastfile default); promote explicitly.
+          PLAY_STORE_RELEASE_STATUS: ${{ inputs.release_status || 'draft' }}
+        run: just release-ci
