@@ -187,37 +187,52 @@ Files: `cs-nback.jsx`, `cs-memory.jsx` (Digit Span, Spatial Grid),
 `cs-attention.jsx` (Stroop, Flanker, Go/No-Go), `cs-flex.jsx` (Task Switching,
 Trail Making), `cs-speed.jsx` (Reaction Time).
 
-| Game | Domain | Mechanic | Metric | Adaptation |
-|---|---|---|---|---|
-| **N-Back** | Working Memory | tap when shape repeats N back | accuracy % | N up >85% / down <60% (cap 4) |
-| **Digit Span** | Working Memory | recall digits on a keypad, in order | best span | ±1 length on 2 correct / 2 fails |
-| **Spatial Grid** | Spatial Reasoning | repeat the flashed 4×4 cell sequence | best span | ±1 length staircase |
-| **Stroop** | Attention & Inhibition | tap the shape you SEE, not the word on it | accuracy % | per-round |
-| **Flanker** | Sustained Attention | tap the way the MIDDLE arrow points | accuracy % | per-round |
-| **Go / No-Go** | Attention & Inhibition | tap circle (Go), withhold square (No-Go) | accuracy % | per-round |
-| **Task Switching** | Mental Flexibility | judge SHAPE or FILL — rule keeps switching | accuracy % | per-round |
-| **Trail Making** | Mental Flexibility | connect 1→12 in order, against the clock | seconds | per-round |
-| **Reaction Time** | Processing Speed | tap the instant the shape appears | avg ms / best | baseline measure |
+> **Scope note (visual vs system).** This doc is authoritative for the *visual /
+> interaction* design (mono, motion, layout) — **not** for the difficulty *system*.
+> The prototype implemented a within-game staircase for only three games (N-Back,
+> Digit Span, Spatial Grid) and ran the rest at fixed difficulty (the old
+> "per-round" label). The **build restores adaptive difficulty for every game except
+> Reaction Time**, per the product spec; `SPEC.md` §7 / §4.3 are authoritative for
+> that system. The Adaptation column below reflects the *restored* design, with
+> colour-bound levers reinterpreted for mono.
 
-Persistence keys (`cogscroll:*`): `nback-n`, `nback-acc`, `digit-span`,
-`corsi-span`, `stroop-acc`, `flanker-acc`, `gng-acc`, `switch-acc`, `trail-time`,
-`rt-avg`. **Every game also calls `CS.recordResult(domain, CS.normalize(key, raw))`
-in `finish()`** to feed the analytics layer. The six baseline/session games
-(reaction, flanker, gonogo, nback, corsi, trails) additionally support the
-`baseline` prop (§5); the other three only record results.
+| Game (id, mode) | Domain | Mechanic | Metric | Adaptation (restored) |
+|---|---|---|---|---|
+| **N-Back** (`nback`) | Working Memory | tap when shape repeats N back | accuracy % | N start 1, up >85% / down <60% (cap 4) |
+| **Digit Span** (`digitspan` fwd/bwd) | Working Memory | recall digits on a keypad (forward / reverse) | best span | ±1 span on 2 correct / 2 fails |
+| **Spatial Grid** (`corsi`) | Spatial Reasoning | repeat the flashed cell sequence | best span | ±1 span; grid grows 4×4→5×5 when span>6 |
+| **Stroop** (`stroop`) | Attention & Inhibition | tap the shape you SEE, not the word on it | interference cost ms | level 1→5 (speed / shape confusability) |
+| **Flanker** (`flanker`) | Sustained Attention | tap the way the MIDDLE arrow points | accuracy % | level 1→5 (flanker count / display window) |
+| **Go / No-Go** (`gonogo`) | Attention & Inhibition | tap circle (Go), withhold square (No-Go) | accuracy % | level 1→5 (No-Go ratio / ISI) |
+| **Task Switching** (`taskswitch`) | Mental Flexibility | judge the active rule (shape/fill/size) | accuracy % | level 1→5 (switch cadence / window / 3 rules) |
+| **Trail Making** (`trails` A/B) | Mental Flexibility | connect in order (A: 1→N; B: 1→A→2→B…), timed | s/target | level 1→5 (target count 8→25) |
+| **Reaction Time** (`reaction`) | Processing Speed | tap the instant the shape appears | avg ms / best | none — baseline measure |
+
+Persistence keys (`cogscroll:*`) — full set in `SPEC.md` §4.2: per-game difficulty
+`*-level` + `*-streak`, span levels (`corsi-span`, `digit-span-fwd`,
+`digit-span-bwd`), and display-only last metrics (`nback-acc`, `flanker-acc`,
+`gng-acc`, `switch-acc`, `trail-a-time`, `trail-b-time`, `stroop-interference`,
+`rt-avg`). **Every game calls `recordResult(domain, normalize(key, raw))` in
+`finish()`.** The runner-capable engines (reaction, flanker, gonogo, nback, corsi,
+trails — trails as Mode A/B) support the `baseline` prop (§5); digitspan (fwd/bwd),
+stroop, and taskswitch only record results.
 
 App-level keys: `domains` (analytics store), `onboarded`, `baselinePrompted`,
 `session` (`{date, steps, done}`), `notify`, `notifyTime` (`{h, m}`),
 `trialStart`, `purchased`.
 
-### Two B&W adaptations (validate with stakeholders)
+### Two B&W adaptations (signed off)
 The spec's Stroop and Task Switching rely on colour, which our mono system rules
-out. Both were re-cast to preserve the *cognitive construct* without colour:
+out. Both are re-cast to preserve the *cognitive construct* without colour:
 - **Stroop → shape-Stroop.** A word naming one shape is drawn over a *different*
   shape (word on a white plate so it's always legible); tap the shape you see.
-  Same read-vs-perceive interference.
-- **Task Switching → shape/fill.** The two switching rules are "judge the shape
-  (circle/square)" vs "judge the fill (filled/hollow)". Same set-shifting / switch cost.
+  Same read-vs-perceive interference. The restored difficulty escalates presentation
+  speed, **shape confusability** (replacing the colour "similar hues" lever),
+  spacing, and option count; the metric is interference cost (incongruent − congruent RT).
+- **Task Switching → shape/fill/size.** Rules are "judge shape (circle/square)",
+  "judge fill (filled/hollow)", and "judge size (big/small)" — the third, non-colour
+  attribute lets the top level rotate three rules. Levels 1–4 use shape/fill with
+  escalating cadence + a tightening window; level 5 rotates all three.
 
 ---
 
@@ -229,7 +244,8 @@ registry. Personal trajectory only — no scores vs other users.
 ### 7.1 Onboarding baseline (`cs-onboarding.jsx` → `CS.Baseline`)
 First-run, surfaced as a locked "Today" hero (or **Settings → Start baseline**).
 **One gentle game per domain** (`BASELINE_SET`: reaction, flanker, gonogo,
-nback, corsi, trails), abbreviated to land under ~5 min. Welcome → games
+nback, corsi, trails — Trail Making uses **Mode A** as the gentler baseline),
+abbreviated to land under ~5 min. Welcome → games
 auto-advance (each keeps its own Intro; unified header with progress + **Skip**)
 → completion **reveals the seeded radar**, then lands on Home. Skipped domains
 stay "no data". No mid-flow resume (restarts clean). Sets `onboarded` +

@@ -86,27 +86,37 @@ a count, throws on malformed. `clearAnalytics()` = wipe both Drift tables + per-
 
 ---
 
-## M3 — The nine games  *(needs M1, M2; one issue each)*
+## M3 — The nine games + restored adaptive difficulty  *(needs M1, M2)*
 
-Each game: a **pure engine** (`SPEC.md` §3.4) + a widget; runner support per §3.5 where
-marked **R**; `finish()` wires `recordResult(domain, normalize(key, raw))` and persists
-per-game state. Port mechanics/lengths/timings from the named module.
+**Within-game adaptive difficulty is restored for every game except Reaction Time** (`SPEC.md`
+§7 / §4.3). Uniform staircase: **+1 level after two consecutive rounds above the up-threshold,
+−1 after two below**; level + streak persisted. Span games (Corsi, Digit Span) keep within-play
+±1 on two-consecutive correct/fail and track `best`. Scoring is **level/mode-aware** (raw is a
+record for leveled games). Each game: a **pure engine** (`SPEC.md` §3.4) + a widget; runner
+support per §3.5 where marked **R**; `finish()` wires `recordResult(domain, normalize(key, raw))`
+and persists per-game state (level + streak / span + display-only last metric).
 
-- **#11 — Reaction Time** *(R, Processing Speed, `cs-speed.jsx`, `rt-avg`)*
-- **#12 — N-Back** *(R, Working Memory, `cs-nback.jsx`, `nback`; N staircase up>85/down<60 cap 4)*
-- **#13 — Flanker** *(R, Sustained Attention, `cs-attention.jsx`, `flanker-acc`; directional surge)*
-- **#14 — Go / No-Go** *(R, Attention & Inhibition, `cs-attention.jsx`, `gng-acc`; correct withhold still pulses)*
-- **#15 — Spatial Grid / Corsi** *(R, Spatial Reasoning, `cs-memory.jsx`, `corsi-span`; ±1 staircase)*
-- **#16 — Trail Making** *(R, Mental Flexibility, `cs-flex.jsx`, `trail-time`; 1→12 timed)*
-- **#17 — Digit Span** *(catalog-only, Working Memory, `cs-memory.jsx`, `digit-span`; ±1 staircase)*
-- **#18 — Stroop (shape)** *(catalog-only, Attention & Inhibition, `cs-attention.jsx`, `stroop-acc`; word-on-plate over a different shape)*
-- **#19 — Task Switching (shape/fill)** *(catalog-only, Mental Flexibility, `cs-flex.jsx`, `switch-acc`; rule banner switches)*
+Delivered as staged PRs (see plan): **PR 0a** spec & issue rework → **PR 0b** foundations
+(**#38**: shared engine/scaffold, `LevelStaircase`/`SpanStaircase`, eager-sync `CsStore`,
+level/mode-aware `normalize`, `Clock.stopwatch()`, `GameRegistry`, `/game/:id` + dev catalog) →
+one game PR each, fanning out from N-Back.
 
-*Tests (each):* engine unit tests — correct vs incorrect resolution, staircase transitions
-(where applicable), `finish()` produces the expected normalized score and persists per-game
-state; a widget smoke test of the core tap/response path + feedback motion. The six **R**
-games additionally: a runner-mode test (hides own TopBar, abbreviated length, calls
-`onDone` instead of `RoundEnd`, still records).
+- **#11 — Reaction Time** *(R, Processing Speed, `cs-speed.jsx`, `rt-avg`; baseline measure — no staircase; `Clock.stopwatch`; too-soon→restart)*
+- **#12 — N-Back** *(R, Working Memory, `cs-nback.jsx`, `nback {acc,n}`; **start N=1**; N staircase up>85/down<60 cap 4, two-consecutive rule)*
+- **#13 — Flanker** *(R, Sustained Attention, `cs-attention.jsx`, `flanker-acc {acc,level}`; directional surge; **levels 1–5**: flanker count / display window)*
+- **#14 — Go / No-Go** *(R, Attention & Inhibition, `cs-attention.jsx`, `gng-acc {acc,level}`; correct withhold pulses; **levels 1–5**: No-Go ratio / ISI)*
+- **#15 — Spatial Grid / Corsi** *(R, Spatial Reasoning, `cs-memory.jsx`, `corsi-span`; ±1 span staircase; **grid grows 4×4→5×5 when span>6**)*
+- **#16 — Trail Making (Mode A & B)** *(R, Mental Flexibility, `cs-flex.jsx`, `trail-time` s/target; **Mode A 1→N, Mode B 1→A→2→B…**; **levels 1–5** target count 8→25; two registry entries)*
+- **#17 — Digit Span (forward & backward)** *(catalog-only, Working Memory, `cs-memory.jsx`, mode-aware `digit-span`; **forward start 4 / backward start 3**, ±1 span; two registry entries)*
+- **#18 — Stroop (shape)** *(catalog-only, Attention & Inhibition, `cs-attention.jsx`, **interference-cost ms** `stroop {interferenceMs,level}`; word-on-plate over a different shape; **levels 1–5**: speed / shape confusability; needs RT capture)*
+- **#19 — Task Switching (shape/fill/size)** *(catalog-only, Mental Flexibility, `cs-flex.jsx`, `switch-acc {acc,level}`; **three rules incl. size**; **levels 1–5**: cadence / window / 3-rule top level)*
+
+*Tests (each):* engine unit — correct vs incorrect resolution, **level/span staircase
+transitions** (two-consecutive ±1, bounds, persistence; span best/floor), `finish()` produces
+the expected **level/mode-aware** normalized score and persists per-game state; a widget smoke
+test of the core tap/response path + feedback motion. The **R** games additionally: a
+runner-mode test (hides own TopBar, abbreviated length, calls `onDone` instead of `RoundEnd`,
+still records).
 
 ---
 
