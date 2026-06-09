@@ -25,6 +25,31 @@ void main() {
       expect(gonogo.runnerCapable, isTrue);
     });
 
+    test('registers Corsi as a runner-capable Spatial Reasoning game', () {
+      final corsi = GameRegistry.byId('corsi');
+      expect(corsi, isNotNull);
+      expect(corsi!.domain, 'Spatial Reasoning');
+      expect(corsi.runnerCapable, isTrue);
+    });
+
+    test('registers Digit Span fwd & bwd as catalog-only Working Memory', () {
+      final fwd = GameRegistry.byId('digitspan-fwd');
+      final bwd = GameRegistry.byId('digitspan-bwd');
+      expect(fwd, isNotNull);
+      expect(bwd, isNotNull);
+      expect(fwd!.domain, 'Working Memory');
+      expect(bwd!.domain, 'Working Memory');
+      expect(fwd.runnerCapable, isFalse);
+      expect(bwd.runnerCapable, isFalse);
+    });
+
+    test('digit-span modes are excluded from the runner subset', () {
+      final runnerIds = GameRegistry.runnerGames.map((g) => g.id);
+      expect(runnerIds, isNot(contains('digitspan-fwd')));
+      expect(runnerIds, isNot(contains('digitspan-bwd')));
+      expect(runnerIds, contains('corsi'));
+    });
+
     test('byId returns null for an unknown id', () {
       expect(GameRegistry.byId('does-not-exist'), isNull);
     });
