@@ -31,6 +31,18 @@ abstract final class CsStoreKeys {
   /// Display-only last n-back accuracy.
   static const nbackAcc = 'nback-acc';
 
+  /// Persisted flanker staircase level (1–5).
+  static const flankerLevel = 'flanker-level';
+
+  /// Persisted flanker streak (two-consecutive ±1 staircase).
+  static const flankerStreak = 'flanker-streak';
+
+  /// Persisted go/no-go staircase level (1–5).
+  static const gngLevel = 'gng-level';
+
+  /// Persisted go/no-go streak (two-consecutive ±1 staircase).
+  static const gngStreak = 'gng-streak';
+
   /// Persisted digit-span best span.
   static const digitSpan = 'digit-span';
 
@@ -65,6 +77,10 @@ abstract final class CsStoreKeys {
     nbackN,
     nbackStreak,
     nbackAcc,
+    flankerLevel,
+    flankerStreak,
+    gngLevel,
+    gngStreak,
     digitSpan,
     corsiSpan,
     stroopAcc,

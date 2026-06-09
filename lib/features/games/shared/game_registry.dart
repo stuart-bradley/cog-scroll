@@ -1,4 +1,6 @@
 import 'package:cogscroll/core/analytics/domains.dart';
+import 'package:cogscroll/features/games/flanker/presentation/flanker_screen.dart';
+import 'package:cogscroll/features/games/gonogo/presentation/gonogo_screen.dart';
 import 'package:cogscroll/features/games/nback/presentation/nback_screen.dart';
 import 'package:cogscroll/features/games/reaction/presentation/reaction_screen.dart';
 import 'package:cogscroll/features/games/shared/runner_context.dart';
@@ -57,6 +59,20 @@ abstract final class GameRegistry {
       domain: Domains.processingSpeed,
       runnerCapable: true,
       build: ({runner}) => ReactionScreen(runner: runner),
+    ),
+    GameDescriptor(
+      id: 'flanker',
+      title: 'Flanker',
+      domain: Domains.sustainedAttention,
+      runnerCapable: true,
+      build: ({runner}) => FlankerScreen(runner: runner),
+    ),
+    GameDescriptor(
+      id: 'gonogo',
+      title: 'Go / No-Go',
+      domain: Domains.attentionInhibition,
+      runnerCapable: true,
+      build: ({runner}) => GoNoGoScreen(runner: runner),
     ),
   ];
 
