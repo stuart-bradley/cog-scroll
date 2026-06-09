@@ -45,14 +45,18 @@ void main() {
     expect(find.byKey(const ValueKey('digit-key-0')), findsOneWidget);
   });
 
-  testWidgets('a correct recall blooms over the slots', (tester) async {
+  testWidgets('a correct recall blooms over the slots (still visible)', (
+    tester,
+  ) async {
     await tester.pumpWidget(host(state(fb: DigitSpanFeedback.hit)));
     expect(find.byType(Bloom), findsOneWidget);
+    expect(find.text('·'), findsWidgets); // recall slots stay visible
   });
 
-  testWidgets('a wrong recall shakes', (tester) async {
+  testWidgets('a wrong recall shakes (still visible)', (tester) async {
     await tester.pumpWidget(host(state(fb: DigitSpanFeedback.wrong)));
     expect(find.byType(Shake), findsOneWidget);
+    expect(find.text('·'), findsWidgets); // recall slots stay visible
   });
 
   testWidgets('backward mode shows the reverse hint during recall', (
