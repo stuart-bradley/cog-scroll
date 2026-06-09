@@ -81,6 +81,7 @@ void main() {
       );
       expect(store.values[CsStoreKeys.digitSpanFwd], 6);
       expect(engine.state.summary?.span, 6);
+      expect(engine.state.summary?.spanDelta, isNull); // first play
     });
   });
 
@@ -131,18 +132,19 @@ void main() {
     });
   });
 
-  test(
-    'eases the span down on two consecutive failures, not below the floor',
-    () {
-      fakeAsync((async) {
-        // Forward floor is 3; resume at 3, fail everything → never below 3.
-        final store = FakeGameStore()..setInt(CsStoreKeys.digitSpanFwd, 3);
-        final engine = build(FakeGameSink(), store, mode: DigitSpanMode.forward)
-          ..start();
-        playRound(engine, async, correct: false);
-        expect(engine.state.summary?.span, 0); // nothing recalled
-        expect(store.values[CsStoreKeys.digitSpanFwd], 0);
-      });
-    },
-  );
+  test('eases the span down on consecutive failures, clamped at the floor', () {
+    fakeAsync((async) {
+      // Resume above the floor (5) so the decrement path actually runs: an
+      // all-wrong round steps the level 5 → 4 → 3 and then holds at the
+      // forward floor of 3.
+      final store = FakeGameStore()..setInt(CsStoreKeys.digitSpanFwd, 5);
+      final engine = build(FakeGameSink(), store, mode: DigitSpanMode.forward)
+        ..start();
+      playRound(engine, async, correct: false);
+      expect(engine.state.level, 3); // eased from 5, clamped at the floor
+      expect(engine.state.summary?.span, 0); // nothing recalled
+      expect(store.values[CsStoreKeys.digitSpanFwd], 0);
+      expect(engine.state.summary?.spanDelta, -5); // 0 − 5
+    });
+  });
 }

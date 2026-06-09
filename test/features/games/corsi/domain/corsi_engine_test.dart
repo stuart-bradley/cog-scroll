@@ -84,6 +84,31 @@ void main() {
       expect(store.values[CsStoreKeys.corsiSpan], 5);
       expect(engine.state.phase, GamePhase.round);
       expect(engine.state.summary?.span, 5);
+      expect(engine.state.summary?.spanDelta, isNull); // first play
+    });
+  });
+
+  test('improving on the persisted best shows a positive delta', () {
+    fakeAsync((async) {
+      final store = FakeGameStore()..setInt(CsStoreKeys.corsiSpan, 3);
+      final engine = build(FakeGameSink(), store)..start();
+      playRound(engine, async, correct: true); // resumes at 3, climbs to 5
+      expect(store.values[CsStoreKeys.corsiSpan], 5);
+      expect(engine.state.summary?.spanDelta, 2); // 5 − 3
+    });
+  });
+
+  test('a weak round lowers the stored span and shows a negative delta', () {
+    fakeAsync((async) {
+      // Persisted best 7; an all-wrong round recalls nothing (best 0), so the
+      // stored span FALLS to 0 — the deliberate "can rise or fall" behaviour
+      // that lets the dashboard show real regressions.
+      final store = FakeGameStore()..setInt(CsStoreKeys.corsiSpan, 7);
+      final engine = build(FakeGameSink(), store)..start();
+      playRound(engine, async, correct: false);
+      expect(store.values[CsStoreKeys.corsiSpan], 0);
+      expect(engine.state.summary?.span, 0);
+      expect(engine.state.summary?.spanDelta, -7); // 0 − 7
     });
   });
 
