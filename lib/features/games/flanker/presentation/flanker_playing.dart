@@ -87,9 +87,10 @@ class FlankerPlaying extends StatelessWidget {
   /// motion: a correct answer surges it toward the answer; a wrong answer (or a
   /// missed deadline) shakes it.
   Widget _stimulus(FlankerParams params) {
-    final dir = state.dir;
-    if (dir == null) return const SizedBox.shrink();
-    final flankerDir = params.congruent ? dir : flipDir(dir);
+    final stim = state.stim;
+    if (stim == null) return const SizedBox.shrink();
+    final dir = stim.dir;
+    final flankerDir = stim.congruent ? dir : flipDir(dir);
     final flankerSize = params.fullSizeFlankers ? _targetSize : _smallFlanker;
     final row = Row(
       mainAxisSize: MainAxisSize.min,

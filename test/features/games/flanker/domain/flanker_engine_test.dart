@@ -39,8 +39,9 @@ void main() {
     var guard = 0;
     while (engine.state.phase == GamePhase.playing && guard++ < 500) {
       final st = engine.state;
-      if (st.fb == null && st.dir != null) {
-        final choice = decide(st.dir!);
+      final stim = st.stim;
+      if (st.fb == null && stim != null) {
+        final choice = decide(stim.dir);
         if (choice != null) {
           engine.respond(choice);
         } else {

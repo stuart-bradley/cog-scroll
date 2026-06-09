@@ -55,7 +55,7 @@ class FlankerEngine extends GameEngine<FlankerState> {
   GamePhase _phase = GamePhase.intro;
   int _level;
   int _idx = 0;
-  FlankerDir? _dir;
+  FlankerStim? _stim;
   FlankerFeedback? _fb;
   FlankerSummary? _summary;
   String? _levelMsg;
@@ -70,7 +70,7 @@ class FlankerEngine extends GameEngine<FlankerState> {
     level: store.getInt(CsStoreKeys.flankerLevel) ?? 1,
     round: round,
     idx: 0,
-    dir: null,
+    stim: null,
     fb: null,
     summary: null,
     levelMsg: null,
@@ -81,7 +81,7 @@ class FlankerEngine extends GameEngine<FlankerState> {
     level: _level,
     round: _round,
     idx: _idx,
-    dir: _dir,
+    stim: _stim,
     fb: _fb,
     summary: _summary,
     levelMsg: _levelMsg,
@@ -112,7 +112,7 @@ class FlankerEngine extends GameEngine<FlankerState> {
   void _trial() {
     clearTimers();
     _resolved = false;
-    _dir = randomFlankerDir(_random);
+    _stim = generateFlankerStim(_level, _random);
     _fb = null;
     _publish();
     final windowMs = flankerParamsForLevel(_level).windowMs;
@@ -129,7 +129,7 @@ class FlankerEngine extends GameEngine<FlankerState> {
   void _resolve(FlankerDir? side) {
     _resolved = true;
     clearTimers();
-    final correct = side == _dir;
+    final correct = side == _stim?.dir;
     _results.add(correct);
     _fb = correct ? FlankerFeedback.hit : FlankerFeedback.wrong;
     _publish(); // stimulus stays visible through the feedback motion
@@ -169,7 +169,7 @@ class FlankerEngine extends GameEngine<FlankerState> {
     unawaited(sink.recordResult(Domains.sustainedAttention, norm));
 
     _phase = GamePhase.round;
-    _dir = null;
+    _stim = null;
     _fb = null;
 
     final activeRunner = runner;

@@ -29,29 +29,26 @@ void main() {
     random: Random(seed),
   );
 
-  // Enough to clear the feedback window (800) + the longest ISI (1000).
-  const settle = Duration(milliseconds: 1900);
-
   /// Plays the round to completion. [tap] decides, given the current shape id,
-  /// whether to tap (otherwise the response window lapses).
+  /// whether to tap (otherwise the response window lapses). Steps time in small
+  /// increments and acts once per fresh trial, so it is robust to the exact
+  /// feedback-window / ISI durations.
   void playRound(
     GoNoGoEngine engine,
     FakeAsync async,
     bool Function(int shape) tap,
   ) {
     var guard = 0;
-    while (engine.state.phase == GamePhase.playing && guard++ < 800) {
+    var actedIdx = -1;
+    while (engine.state.phase == GamePhase.playing && guard++ < 4000) {
       final st = engine.state;
-      if (st.showing && st.fb == null && st.shape != null) {
-        if (tap(st.shape!)) {
-          engine.tap();
-        } else {
-          async.elapse(const Duration(milliseconds: gngDisplayMs + 50));
-        }
-        async.elapse(settle);
-      } else {
-        async.elapse(const Duration(milliseconds: 50));
+      final fresh =
+          st.showing && st.fb == null && st.shape != null && st.idx != actedIdx;
+      if (fresh) {
+        actedIdx = st.idx;
+        if (tap(st.shape!)) engine.tap(); // else: let the window lapse
       }
+      async.elapse(const Duration(milliseconds: 40));
     }
   }
 

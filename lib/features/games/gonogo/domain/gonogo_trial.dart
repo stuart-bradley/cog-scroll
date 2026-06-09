@@ -14,6 +14,19 @@ const int gngNoGoHexagon = 5;
 /// No-response resolves the trial.
 const int gngDisplayMs = 720;
 
+/// Feedback window after a resolved trial — kept near the prototype's 540 ms so
+/// the game stays snappy (the per-level ISI ladder is the difficulty lever, not
+/// fixed per-trial overhead). The bloom/pulse feedback motions are sped up to
+/// [gngFeedbackMotion] so they finish inside this window with the stimulus
+/// visible (DESIGN non-negotiable) — rather than padding the window out to the
+/// motions' default lengths and slowing every trial.
+const Duration gngFeedbackWindow = Duration(milliseconds: 540);
+
+/// The sped-up bloom/pulse feedback-motion length — comfortably inside
+/// [gngFeedbackWindow] (and the wrong-answer shake is 500 ms), so the stimulus
+/// stays visible for the whole motion.
+const Duration gngFeedbackMotion = Duration(milliseconds: 460);
+
 /// The per-level parameters for a Go/No-Go round (`SPEC.md` §7.1):
 ///
 /// - **L1** 80/20 Go/No-Go, ISI 1000 ms.

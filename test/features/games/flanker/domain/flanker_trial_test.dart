@@ -6,17 +6,17 @@ import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   group('flankerParamsForLevel', () {
-    test('L1 is congruent with one flanker and the lenient window', () {
+    test('L1 is all-congruent with one flanker and the lenient window', () {
       final p = flankerParamsForLevel(1);
-      expect(p.congruent, isTrue);
+      expect(p.congruentRate, 1.0);
       expect(p.flankersPerSide, 1);
       expect(p.windowMs, flankerBaseWindowMs);
       expect(p.fullSizeFlankers, isFalse);
     });
 
-    test('L2 turns incongruent, still one flanker', () {
+    test('L2 drops to the incongruent-heavy mix, still one flanker', () {
       final p = flankerParamsForLevel(2);
-      expect(p.congruent, isFalse);
+      expect(p.congruentRate, flankerCongruentRate);
       expect(p.flankersPerSide, 1);
       expect(p.windowMs, flankerBaseWindowMs);
     });
@@ -37,8 +37,39 @@ void main() {
     });
 
     test('clamps out-of-range levels to 1–5', () {
-      expect(flankerParamsForLevel(0).congruent, isTrue); // → L1
+      expect(flankerParamsForLevel(0).congruentRate, 1.0); // → L1
       expect(flankerParamsForLevel(99).windowMs, 300); // → L5
+    });
+  });
+
+  group('generateFlankerStim', () {
+    test('L1 is always congruent (the easy floor)', () {
+      final random = Random(5);
+      for (var i = 0; i < 200; i++) {
+        expect(generateFlankerStim(1, random).congruent, isTrue);
+      }
+    });
+
+    test('above L1 it is a probabilistic mix near the 0.4 congruent rate', () {
+      final random = Random(5);
+      final congruent = [
+        for (var i = 0; i < 1000; i++) generateFlankerStim(2, random),
+      ].where((s) => s.congruent).length;
+      // ~40% congruent — a per-trial mix, neither all-congruent nor all-
+      // incongruent (the classic flanker design).
+      expect(congruent, greaterThan(300));
+      expect(congruent, lessThan(500));
+    });
+
+    test('the target direction varies across trials', () {
+      final random = Random(5);
+      final dirs = {
+        for (var i = 0; i < 50; i++) generateFlankerStim(3, random).dir,
+      };
+      expect(
+        dirs,
+        containsAll(<FlankerDir>{FlankerDir.left, FlankerDir.right}),
+      );
     });
   });
 

@@ -13,6 +13,11 @@ enum FlankerDir {
 FlankerDir flipDir(FlankerDir dir) =>
     dir == FlankerDir.left ? FlankerDir.right : FlankerDir.left;
 
+/// One generated trial: the target's direction and whether the flankers are
+/// congruent (point the same way). The correct response is always `dir`,
+/// regardless of congruency — congruency only changes how the flankers look.
+typedef FlankerStim = ({FlankerDir dir, bool congruent});
+
 /// The feedback motion a resolved Flanker trial shows. A correct answer drives
 /// a directional surge; a wrong answer (or a timeout) shakes.
 enum FlankerFeedback {
@@ -42,8 +47,9 @@ typedef FlankerState = ({
   /// Current trial index (0-based); drives progress + the countdown key.
   int idx,
 
-  /// The target arrow's direction, or null when blank between trials.
-  FlankerDir? dir,
+  /// The current trial (target direction + congruency), or null when blank
+  /// between trials.
+  FlankerStim? stim,
 
   /// The resolved-trial feedback, or null mid-trial.
   FlankerFeedback? fb,

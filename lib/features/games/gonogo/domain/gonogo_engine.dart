@@ -16,12 +16,6 @@ import 'package:cogscroll/features/games/shared/timers.dart';
 /// Default trial count for a full (non-runner) round.
 const int goNoGoDefaultRound = 24;
 
-// The feedback window holds the stimulus visible for the whole feedback motion
-// (square pulse is the longest at 780 ms; DESIGN §3 — never cut it short, the
-// bug the prototype's 540 ms had). The ISI (the *blank* between trials) is the
-// level-dependent difficulty lever, applied after this window.
-const Duration _feedback = Duration(milliseconds: 800);
-
 /// Pure Go/No-Go engine (Attention & Inhibition). Tap for the circle (Go),
 /// withhold for the square/hexagon (No-Go). A two-consecutive-rounds ±1
 /// staircase rides a difficulty level (1–5; up when round accuracy > 85%, down
@@ -147,7 +141,7 @@ class GoNoGoEngine extends GameEngine<GngState> {
         ? GngFeedback.correctGo
         : GngFeedback.correctWithhold;
     _publish(); // stimulus stays visible through the feedback motion
-    after(_feedback, _advance);
+    after(gngFeedbackWindow, _advance);
   }
 
   void _advance() {

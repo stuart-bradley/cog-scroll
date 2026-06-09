@@ -59,11 +59,13 @@ class GoNoGoPlaying extends StatelessWidget {
       case GngFeedback.correctGo:
         return Bloom(
           trigger: state.idx,
+          duration: gngFeedbackMotion,
           child: Shape(id: shape),
         );
       case GngFeedback.correctWithhold:
         return Pulse(
           trigger: state.idx,
+          duration: gngFeedbackMotion,
           child: Shape(id: shape),
         );
       case GngFeedback.wrong:
