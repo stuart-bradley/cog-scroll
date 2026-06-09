@@ -25,6 +25,9 @@ abstract final class CsStoreKeys {
   /// Persisted n-back staircase level.
   static const nbackN = 'nback-n';
 
+  /// Persisted n-back consecutive-qualifying-round streak (two-consecutive ±1).
+  static const nbackStreak = 'nback-streak';
+
   /// Display-only last n-back accuracy.
   static const nbackAcc = 'nback-acc';
 
@@ -60,6 +63,7 @@ abstract final class CsStoreKeys {
   /// analytics themselves.
   static const perfKeys = <String>[
     nbackN,
+    nbackStreak,
     nbackAcc,
     digitSpan,
     corsiSpan,

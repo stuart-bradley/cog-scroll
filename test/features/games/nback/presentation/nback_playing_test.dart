@@ -12,6 +12,7 @@ void main() {
   NbackState state(NbackFeedback? fb) => (
     phase: GamePhase.playing,
     n: 1,
+    round: 20,
     idx: 0,
     shape: 0,
     showing: true,

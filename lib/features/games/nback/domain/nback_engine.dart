@@ -4,6 +4,7 @@ import 'dart:math';
 import 'package:cogscroll/core/analytics/domains.dart';
 import 'package:cogscroll/core/scoring/js_round.dart';
 import 'package:cogscroll/core/scoring/normalize.dart';
+import 'package:cogscroll/core/storage/cs_store_keys.dart';
 import 'package:cogscroll/core/time/clock.dart';
 import 'package:cogscroll/features/games/nback/domain/nback_sequence.dart';
 import 'package:cogscroll/features/games/nback/domain/nback_state.dart';
@@ -26,7 +27,7 @@ const Duration _correctRejectionBlank = Duration(milliseconds: 360);
 class NbackEngine extends GameEngine<NbackState> {
   /// Creates an engine. [round] / [random] are injectable for tests; otherwise
   /// the round length comes from the runner (abbreviated) or the full default.
-  // Not super-params: the initializer reads `store` to seed N + the snapshot.
+  // Not super-params: the initializer reads `store` to seed the snapshot.
   // ignore: use_super_parameters
   NbackEngine({
     required GameSink sink,
@@ -38,14 +39,14 @@ class NbackEngine extends GameEngine<NbackState> {
     Random? random,
   }) : _round = round ?? runner?.trials ?? nbackDefaultRound,
        _random = random ?? Random(),
-       _n = store.getInt('nback-n') ?? 1,
+       _n = store.getInt(CsStoreKeys.nbackN) ?? 1,
        super(
          sink: sink,
          store: store,
          clock: clock,
          runner: runner,
          timers: timers,
-         initial: _seed(store),
+         initial: _seed(store, round ?? runner?.trials ?? nbackDefaultRound),
        );
 
   final int _round;
@@ -66,9 +67,10 @@ class NbackEngine extends GameEngine<NbackState> {
   late LevelStaircase _staircase;
   int? _lastAcc;
 
-  static NbackState _seed(GameStore store) => (
+  static NbackState _seed(GameStore store, int round) => (
     phase: GamePhase.intro,
-    n: store.getInt('nback-n') ?? 1,
+    n: store.getInt(CsStoreKeys.nbackN) ?? 1,
+    round: round,
     idx: 0,
     shape: null,
     showing: false,
@@ -80,6 +82,7 @@ class NbackEngine extends GameEngine<NbackState> {
   void _publish() => emit((
     phase: _phase,
     n: _n,
+    round: _round,
     idx: _idx,
     shape: _shape,
     showing: _showing,
@@ -91,16 +94,16 @@ class NbackEngine extends GameEngine<NbackState> {
   /// Begins a round (from intro or after a standalone round-end).
   void start() {
     clearTimers();
-    _n = store.getInt('nback-n') ?? 1;
+    _n = store.getInt(CsStoreKeys.nbackN) ?? 1;
     _staircase = LevelStaircase(
       level: _n,
       min: 1,
       max: 4,
       upThreshold: 85,
       downThreshold: 60,
-      streak: store.getInt('nback-streak') ?? 0,
+      streak: store.getInt(CsStoreKeys.nbackStreak) ?? 0,
     );
-    _lastAcc = store.getInt('nback-acc');
+    _lastAcc = store.getInt(CsStoreKeys.nbackAcc);
     _seq = buildNbackSequence(_n, _round, _random);
     _idx = 0;
     _results.clear();
@@ -182,9 +185,9 @@ class NbackEngine extends GameEngine<NbackState> {
     final accDelta = lastAcc == null ? null : acc - lastAcc;
 
     store
-      ..setInt('nback-n', newN)
-      ..setInt('nback-streak', _staircase.streak)
-      ..setInt('nback-acc', acc);
+      ..setInt(CsStoreKeys.nbackN, newN)
+      ..setInt(CsStoreKeys.nbackStreak, _staircase.streak)
+      ..setInt(CsStoreKeys.nbackAcc, acc);
     final norm = normalize('nback', (acc: acc, n: playedN));
     unawaited(sink.recordResult(Domains.workingMemory, norm));
 

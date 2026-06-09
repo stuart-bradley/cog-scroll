@@ -22,6 +22,9 @@ typedef NbackState = ({
   /// Current difficulty level N (drives the chrome label + intro text).
   int n,
 
+  /// Trial count for this round (engine-owned; drives progress + footnotes).
+  int round,
+
   /// Current trial index (0-based; drives the progress counter).
   int idx,
 

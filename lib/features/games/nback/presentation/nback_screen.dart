@@ -1,7 +1,6 @@
 import 'package:cogscroll/core/theme/tokens.dart';
 import 'package:cogscroll/core/ui_kit/label.dart';
 import 'package:cogscroll/core/ui_kit/round_end.dart' show DeltaDirection;
-import 'package:cogscroll/features/games/nback/domain/nback_engine.dart';
 import 'package:cogscroll/features/games/nback/domain/nback_state.dart';
 import 'package:cogscroll/features/games/nback/presentation/nback_controller.dart';
 import 'package:cogscroll/features/games/nback/presentation/nback_intro.dart';
@@ -28,7 +27,6 @@ class NbackScreen extends ConsumerWidget {
     final provider = nbackControllerProvider(runner);
     final state = ref.watch(provider);
     final controller = ref.read(provider.notifier);
-    final round = runner?.trials ?? nbackDefaultRound;
 
     final showLevel =
         state.phase == GamePhase.intro || state.phase == GamePhase.playing;
@@ -39,24 +37,28 @@ class NbackScreen extends ConsumerWidget {
       runner: runner,
       onBack: () => context.pop(),
       trailing: showLevel ? Label('${state.n}-Back', color: CsTokens.fg) : null,
-      intro: NbackIntro(n: state.n, round: round, onStart: controller.start),
+      intro: NbackIntro(
+        n: state.n,
+        round: state.round,
+        onStart: controller.start,
+      ),
       playing: NbackPlaying(
         state: state,
-        round: round,
+        round: state.round,
         onTap: controller.tap,
       ),
-      summary: state.summary == null ? null : _roundData(state, round),
+      summary: state.summary == null ? null : _roundData(state),
       onContinue: controller.start,
     );
   }
 
-  RoundData _roundData(NbackState state, int round) {
+  RoundData _roundData(NbackState state) {
     final summary = state.summary!;
     final accDelta = summary.accDelta;
     return (
       value: '${summary.acc}%',
       caption: 'Accuracy',
-      sub: '${summary.playedN}-Back · $round trials',
+      sub: '${summary.playedN}-Back · ${state.round} trials',
       delta: accDelta == null
           ? null
           : (

@@ -1,6 +1,7 @@
 import 'package:cogscroll/core/theme/tokens.dart';
 import 'package:cogscroll/core/ui_kit/intro.dart';
 import 'package:cogscroll/core/ui_kit/shape.dart';
+import 'package:cogscroll/features/games/nback/domain/nback_sequence.dart';
 import 'package:flutter/widgets.dart';
 
 /// The N-Back intro: a row of the six shapes, the rule, and a Begin button.
@@ -33,7 +34,7 @@ class NbackIntro extends StatelessWidget {
       legend: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          for (var i = 0; i < 6; i++)
+          for (var i = 0; i < nbackShapeCount; i++)
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 6),
               child: Shape(id: i, size: 26, color: CsTokens.sub),
