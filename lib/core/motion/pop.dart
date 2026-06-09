@@ -62,6 +62,12 @@ class Pop extends StatelessWidget {
   }
 
   /// Three-keyframe scale-in with an overshoot at the mid-point.
+  ///
+  /// The peak values (1.03 small / 1.13 big) reproduce the prototype's `csPop`
+  /// / `csPopBig` keyframe waypoints directly — its visible bounce comes from
+  /// those waypoints, not the timing function. Applying the spring cubic
+  /// `(0.34,1.56,0.5,1)` to a plain 0.86→1 tween would peak near 1.01 and lose
+  /// most of that bounce, so the keyframe form is kept for fidelity.
   double _scaleAt(double t, {required bool big}) {
     final p = Curves.easeOut.transform(t);
     final mid = big ? 0.55 : 0.6;

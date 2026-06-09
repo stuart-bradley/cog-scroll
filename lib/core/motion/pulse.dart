@@ -94,6 +94,10 @@ class _PulsePainter extends CustomPainter {
     if (opacity <= 0) return;
     final side = base * scale;
     final rect = Rect.fromCenter(center: center, width: side, height: side);
+    // The corner radius scales with the ring (20 at rest) because the prototype
+    // animates a border-radius:20 square via CSS `transform: scale`, which
+    // scales the rounding too — a fixed radius would sharpen the corners as the
+    // ring grows.
     final rrect = RRect.fromRectAndRadius(rect, Radius.circular(20 * scale));
     final paint = Paint()
       ..style = PaintingStyle.stroke
