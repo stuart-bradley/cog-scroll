@@ -10,6 +10,11 @@ import 'package:flutter/widgets.dart';
 /// whenever [trialKey] changes. Delegates its controller lifecycle to
 /// [MotionDriver] (`playOnMount: true`, `trigger: trialKey`) so the controller
 /// survives across trials and the lifecycle lives in one place.
+///
+/// Changing [ms] alone (without a new [trialKey]) re-targets the *next*
+/// depletion's duration but does not restart the current one — games drive a
+/// fresh window by bumping [trialKey], so this edge case is not reachable in
+/// practice.
 class Countdown extends StatelessWidget {
   /// Creates a countdown lasting [ms] milliseconds, restarting when [trialKey]
   /// changes.
