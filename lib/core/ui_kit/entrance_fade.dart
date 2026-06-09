@@ -1,11 +1,13 @@
+import 'package:cogscroll/core/motion/motion_driver.dart';
 import 'package:flutter/widgets.dart';
 
 /// Fades and lifts its [child] in once on first build (opacity 0→1,
 /// translateY 6→0), matching the prototype's `csFade` entrance.
 ///
-/// Self-contained: owns and disposes its own [AnimationController] and plays
-/// it forward on mount (no implicit animation), so callers stay stateless.
-class EntranceFade extends StatefulWidget {
+/// Delegates the controller lifecycle to [MotionDriver] (`playOnMount: true`,
+/// no trigger) so the eager-controller/dispose conventions live in one place;
+/// only the curved opacity/translate math lives here.
+class EntranceFade extends StatelessWidget {
   /// Wraps [child] with a fade-and-rise entrance lasting [duration].
   const EntranceFade({
     required this.child,
@@ -20,41 +22,21 @@ class EntranceFade extends StatefulWidget {
   final Duration duration;
 
   @override
-  State<EntranceFade> createState() => _EntranceFadeState();
-}
-
-class _EntranceFadeState extends State<EntranceFade>
-    with SingleTickerProviderStateMixin {
-  late final AnimationController _controller = AnimationController(
-    vsync: this,
-    duration: widget.duration,
-  )..forward();
-
-  late final Animation<double> _curved = CurvedAnimation(
-    parent: _controller,
-    curve: Curves.easeOut,
-  );
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
-    return AnimatedBuilder(
-      animation: _curved,
-      builder: (context, child) {
+    return MotionDriver(
+      duration: duration,
+      playOnMount: true,
+      child: child,
+      builder: (context, animation, child) {
+        final t = Curves.easeOut.transform(animation.value);
         return Opacity(
-          opacity: _curved.value,
+          opacity: t,
           child: Transform.translate(
-            offset: Offset(0, 6 * (1 - _curved.value)),
+            offset: Offset(0, 6 * (1 - t)),
             child: child,
           ),
         );
       },
-      child: widget.child,
     );
   }
 }

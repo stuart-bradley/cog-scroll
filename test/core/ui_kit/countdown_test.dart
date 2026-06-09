@@ -1,3 +1,4 @@
+import 'package:cogscroll/core/motion/motion_driver.dart';
 import 'package:cogscroll/core/ui_kit/countdown.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -26,7 +27,11 @@ void main() {
       await tester.pumpWidget(
         _wrap(const Countdown(ms: 1000, trialKey: 'a')),
       );
-      final state1 = tester.state<State<Countdown>>(find.byType(Countdown));
+      // The countdown delegates to MotionDriver; restarting must reuse the same
+      // driver State (controller survives) rather than remounting via a key.
+      final state1 = tester.state<State<MotionDriver>>(
+        find.byType(MotionDriver),
+      );
       await tester.pump(const Duration(milliseconds: 600));
       expect(_fillFactor(tester), lessThan(0.6));
 
@@ -34,7 +39,9 @@ void main() {
         _wrap(const Countdown(ms: 1000, trialKey: 'b')),
       );
       await tester.pump();
-      final state2 = tester.state<State<Countdown>>(find.byType(Countdown));
+      final state2 = tester.state<State<MotionDriver>>(
+        find.byType(MotionDriver),
+      );
 
       expect(identical(state1, state2), isTrue);
       expect(_fillFactor(tester), closeTo(1, 0.02));

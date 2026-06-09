@@ -29,7 +29,15 @@ void main() {
     await tester.pumpWidget(host(const Surge(trigger: 1, child: stimulus)));
     await tester.pump();
 
-    await tester.pump(const Duration(milliseconds: 350)); // 70% of 500ms
+    // Mid-ramp (30%): the easeIn interval is still climbing, so the offset must
+    // be strictly between rest and the final 50px — this pins the ramp shape,
+    // not just the held value.
+    await tester.pump(const Duration(milliseconds: 150));
+    final atThirty = _translationX(tester);
+    expect(atThirty, greaterThan(0));
+    expect(atThirty, lessThan(50));
+
+    await tester.pump(const Duration(milliseconds: 200)); // now at 70% of 500ms
     final atSeventy = _translationX(tester);
     await tester.pump(const Duration(milliseconds: 100)); // 90%
     final atNinety = _translationX(tester);

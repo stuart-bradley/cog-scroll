@@ -30,6 +30,7 @@ class _ProgressState extends State<Progress>
   static const double _trackWidth = 188;
 
   late final AnimationController _controller;
+  late final CurvedAnimation _curve;
   late Animation<double> _fill;
 
   @override
@@ -40,6 +41,10 @@ class _ProgressState extends State<Progress>
       duration: const Duration(milliseconds: 200),
       value: 1,
     );
+    // One CurvedAnimation reused for every update: its constructor registers a
+    // status listener on the long-lived controller, so recreating it per idx
+    // change would leak a listener each round.
+    _curve = CurvedAnimation(parent: _controller, curve: Curves.ease);
     _fill = AlwaysStoppedAnimation(_fractionFor(widget));
   }
 
@@ -54,15 +59,14 @@ class _ProgressState extends State<Progress>
     final next = _fractionFor(widget);
     final current = _fill.value;
     if (next != current) {
-      _fill = Tween<double>(begin: current, end: next).animate(
-        CurvedAnimation(parent: _controller, curve: Curves.ease),
-      );
+      _fill = Tween<double>(begin: current, end: next).animate(_curve);
       unawaited(_controller.forward(from: 0));
     }
   }
 
   @override
   void dispose() {
+    _curve.dispose();
     _controller.dispose();
     super.dispose();
   }
