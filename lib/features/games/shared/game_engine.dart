@@ -51,9 +51,9 @@ abstract interface class GameStore {
 ///
 /// Owns the timer list and the change seam; subclasses add the trial loop and
 /// `start` / `<input>` / `finish` methods. No Flutter imports — the engine is
-/// unit-testable in isolation (a `fakeAsync` zone drives [timers] and the
-/// [clock]'s stopwatch). The controller assigns [onChange] to republish
-/// [state].
+/// unit-testable in isolation (a `fakeAsync` zone drives [timers]; a
+/// [FakeClock] drives elapsed-time games). The controller assigns [onChange] to
+/// republish [state].
 abstract class GameEngine<S> {
   /// Creates an engine seeded with the [initial] snapshot.
   GameEngine({
@@ -71,7 +71,7 @@ abstract class GameEngine<S> {
   /// Synchronous per-game persistence (level / streak / last-metric).
   final GameStore store;
 
-  /// Time source (`now` + monotonic `stopwatch`).
+  /// Time source (`now`; games take elapsed time as `now` deltas).
   final Clock clock;
 
   /// Runner context when driven by the baseline/session runner, else null.

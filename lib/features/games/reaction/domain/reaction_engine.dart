@@ -22,7 +22,7 @@ const Duration _tooSoonPause = Duration(milliseconds: 950);
 /// Pure reaction-time engine (Processing Speed). After a random delay a shape
 /// appears; tap as fast as possible. A tap before the shape is "too soon" and
 /// restarts the trial. No staircase — a baseline measure. Ports
-/// `docs/design/cs-speed.jsx`; elapsed time is measured with [Clock.stopwatch].
+/// `docs/design/cs-speed.jsx`; elapsed time is taken as `Clock.now()` deltas.
 class ReactionEngine extends GameEngine<ReactionState> {
   /// Creates an engine. [trials] / [random] are injectable for tests.
   // Not super-params: the initializer reads the resolved total to seed.
@@ -56,7 +56,7 @@ class ReactionEngine extends GameEngine<ReactionState> {
   ReactionSummary? _summary;
 
   final List<int> _times = [];
-  Stopwatch? _stopwatch;
+  DateTime? _readyAt;
   int? _lastAvg;
 
   static ReactionState _seed(int total) => (
@@ -97,7 +97,7 @@ class ReactionEngine extends GameEngine<ReactionState> {
     final waitMs = _minWaitMs + (_random.nextDouble() * _waitSpreadMs).round();
     after(Duration(milliseconds: waitMs), () {
       _stage = ReactionStage.ready;
-      _stopwatch = clock.stopwatch()..start();
+      _readyAt = clock.now();
       _publish();
     });
   }
@@ -113,7 +113,10 @@ class ReactionEngine extends GameEngine<ReactionState> {
         after(_tooSoonPause, _next);
       case ReactionStage.ready:
         clearTimers();
-        final ms = _stopwatch?.elapsedMilliseconds ?? 0;
+        final readyAt = _readyAt;
+        final ms = readyAt == null
+            ? 0
+            : clock.now().difference(readyAt).inMilliseconds;
         _times.add(ms);
         _ms = ms;
         _stage = ReactionStage.result;
