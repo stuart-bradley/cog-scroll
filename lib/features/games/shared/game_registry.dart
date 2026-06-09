@@ -1,5 +1,6 @@
 import 'package:cogscroll/core/analytics/domains.dart';
 import 'package:cogscroll/features/games/nback/presentation/nback_screen.dart';
+import 'package:cogscroll/features/games/reaction/presentation/reaction_screen.dart';
 import 'package:cogscroll/features/games/shared/runner_context.dart';
 import 'package:flutter/widgets.dart';
 
@@ -49,6 +50,13 @@ abstract final class GameRegistry {
       domain: Domains.workingMemory,
       runnerCapable: true,
       build: ({runner}) => NbackScreen(runner: runner),
+    ),
+    GameDescriptor(
+      id: 'reaction',
+      title: 'Reaction Time',
+      domain: Domains.processingSpeed,
+      runnerCapable: true,
+      build: ({runner}) => ReactionScreen(runner: runner),
     ),
   ];
 
