@@ -186,11 +186,11 @@ stimulus**:
 
 | Motion | When | Form |
 |---|---|---|
-| Ring bloom | correct, round stimulus (n-back, reaction) | concentric circle outlines expand + fade |
+| Ring bloom | correct, round stimulus (n-back hit, go/no-go go) | concentric circle outlines expand + fade |
 | Square pulse | correct, square / grid cell | two rounded-square outlines emanate, staggered |
 | Directional surge | correct, Flanker | the arrow row drives in the answer direction |
 | Shake | any wrong answer | stimulus becomes an outline and jitters L–R |
-| Pop / bounce | stimulus entrance | quick scale-in |
+| Pop / bounce | stimulus entrance (reaction stimulus, n-back appear) | quick scale-in |
 
 Rules: **the stimulus stays visible for the whole feedback motion** (blank only *between*
 trials — a known prototype bug hid it early; do not reintroduce). Correct rejections stay

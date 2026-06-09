@@ -37,6 +37,18 @@ void main() {
     expect(find.byType(Shape), findsOneWidget);
   });
 
+  testWidgets('the stimulus stays visible through the pop entrance', (
+    tester,
+  ) async {
+    await tester.pumpWidget(host(ReactionStage.ready));
+    // Tick across the whole pop window — the stimulus never blanks.
+    for (var i = 0; i < 5; i++) {
+      expect(find.byType(Shape), findsOneWidget);
+      await tester.pump(const Duration(milliseconds: 40));
+    }
+    expect(find.byType(Shape), findsOneWidget);
+  });
+
   testWidgets('result stage shows the measured time', (tester) async {
     await tester.pumpWidget(host(ReactionStage.result, ms: 247));
     expect(find.text('247'), findsOneWidget);
