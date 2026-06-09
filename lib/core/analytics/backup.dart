@@ -9,8 +9,11 @@ import 'package:cogscroll/core/storage/cs_store_keys.dart';
 const _domainsKey = 'domains';
 
 /// Builds the export envelope: the prototype `domains` analytics blob (rebuilt
-/// from Drift) plus every [CsStore] key, wrapped with app/version/[exportedAt]
-/// metadata. Wire-compatible with the React prototype's export files.
+/// from Drift) plus every portable [CsStore] key, wrapped with
+/// app/version/[exportedAt] metadata. Entitlement and trial keys
+/// ([CsStoreKeys.nonPortableKeys]) are deliberately excluded so a backup file
+/// never carries forgeable entitlement/trial state. Otherwise wire-compatible
+/// with the React prototype's export files.
 Future<Map<String, dynamic>> snapshot(
   AnalyticsDao dao,
   CsStore store,
@@ -18,6 +21,7 @@ Future<Map<String, dynamic>> snapshot(
 ) async {
   final data = <String, dynamic>{};
   for (final key in store.keys()) {
+    if (CsStoreKeys.nonPortableKeys.contains(key)) continue;
     data[key] = store.getJson<Object>(key);
   }
   data[_domainsKey] = await _readDomains(dao);
@@ -40,9 +44,10 @@ Future<String> exportBackup(
 
 /// Restores a backup [text] — either a full envelope (`{data: {...}}`) or a raw
 /// key/value map. Drift analytics ride in the `domains` key (replacing all
-/// existing analytics); every other key is written to [store]. Returns the
-/// number of top-level keys restored, or throws [FormatException] on a
-/// malformed payload.
+/// existing analytics); every other key is written to [store]. Entitlement and
+/// trial keys ([CsStoreKeys.nonPortableKeys]) are skipped so an untrusted
+/// backup can never grant entitlement or reset the trial. Returns the number of
+/// keys restored, or throws [FormatException] on a malformed payload.
 Future<int> importBackup(String text, AnalyticsDao dao, CsStore store) async {
   final parsed = jsonDecode(text);
   final data = parsed is Map && parsed['data'] != null
@@ -50,15 +55,18 @@ Future<int> importBackup(String text, AnalyticsDao dao, CsStore store) async {
       : parsed;
   if (data is! Map) throw const FormatException('Unrecognised backup file');
 
+  var restored = 0;
   for (final entry in data.entries) {
     final key = entry.key as String;
+    if (CsStoreKeys.nonPortableKeys.contains(key)) continue;
     if (key == _domainsKey) {
       await dao.restore(_parseDomains(entry.value));
     } else {
       await store.setJson(key, entry.value);
     }
+    restored++;
   }
-  return data.length;
+  return restored;
 }
 
 /// Wipes analytics for a baseline redo (SPEC §4.4): clears both Drift tables
@@ -98,18 +106,19 @@ Map<String, DomainBackup> _parseDomains(Object? blob) {
     if (rec is! Map) return;
     final score = (rec['score'] as num?)?.toInt();
     final rawHistory = rec['history'];
-    final history = <HistoryEntry>[
-      if (rawHistory is List)
-        for (final h in rawHistory)
-          if (h is Map)
-            (
-              at: DateTime.fromMillisecondsSinceEpoch(
-                (h['t'] as num).toInt(),
-                isUtc: true,
-              ),
-              score: (h['score'] as num).toInt(),
-            ),
-    ];
+    final history = <HistoryEntry>[];
+    if (rawHistory is List) {
+      for (final h in rawHistory) {
+        if (h is! Map) continue;
+        final t = (h['t'] as num?)?.toInt();
+        final s = (h['score'] as num?)?.toInt();
+        if (t == null || s == null) continue; // skip a partial entry
+        history.add((
+          at: DateTime.fromMillisecondsSinceEpoch(t, isUtc: true),
+          score: s,
+        ));
+      }
+    }
     out[domain as String] = (score: score, history: history);
   });
   return out;

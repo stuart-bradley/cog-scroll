@@ -120,4 +120,51 @@ void main() {
     expect(store.getJson<Map<String, dynamic>>(CsStoreKeys.session), isNotNull);
     await db.close();
   });
+
+  test('entitlement and trial keys never cross the backup boundary', () async {
+    final db = AppDatabase(NativeDatabase.memory());
+    final store = await freshStore();
+    await store.setJson(CsStoreKeys.purchasedCache, true);
+    await store.setJson(CsStoreKeys.trialStart, 1234);
+    await store.setJson(CsStoreKeys.nbackN, 3);
+
+    // Export omits the sensitive keys entirely.
+    final json = await exportBackup(db.analyticsDao, store, DateTime.utc(2026));
+    expect(json.contains('purchasedCache'), isFalse);
+    expect(json.contains('trialStart'), isFalse);
+    expect(json.contains('nback-n'), isTrue);
+    await db.close();
+
+    // A forged backup cannot set entitlement or reset the trial on import.
+    final db2 = AppDatabase(NativeDatabase.memory());
+    final store2 = await freshStore();
+    final count = await importBackup(
+      '{"purchasedCache": true, "trialStart": 999, "nback-n": 7}',
+      db2.analyticsDao,
+      store2,
+    );
+    expect(store2.getBool(CsStoreKeys.purchasedCache), isNull);
+    expect(store2.getInt(CsStoreKeys.trialStart), isNull);
+    expect(
+      store2.getInt(CsStoreKeys.nbackN),
+      7,
+    ); // non-sensitive still imported
+    expect(count, 1); // only nback-n restored
+    await db2.close();
+  });
+
+  test('import tolerates a partial domains history entry', () async {
+    final db = AppDatabase(NativeDatabase.memory());
+    final store = await freshStore();
+    // One well-formed history entry and one missing `t` — the bad one is
+    // skipped, not thrown, honouring _parseDomains' documented tolerance.
+    const payload =
+        '{"data": {"domains": {"Working Memory": {"score": 70, '
+        '"history": [{"t": 1000, "score": 50}, {"score": 99}]}}}}';
+    final count = await importBackup(payload, db.analyticsDao, store);
+    expect(count, 1); // the domains key
+    expect(await db.analyticsDao.readScores(), {'Working Memory': 70});
+    expect(await db.analyticsDao.readHistory('Working Memory'), [50]);
+    await db.close();
+  });
 }

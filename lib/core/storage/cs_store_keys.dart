@@ -70,4 +70,10 @@ abstract final class CsStoreKeys {
     trailTime,
     rtAvg,
   ];
+
+  /// Keys that must never cross the backup boundary — entitlement and trial
+  /// control. Excluded from both export and import so a backup file can neither
+  /// grant entitlement ([purchasedCache] stays Play-derived) nor reset the
+  /// trial ([trialStart] stays set-once on first launch).
+  static const nonPortableKeys = <String>[purchasedCache, trialStart];
 }
