@@ -1,4 +1,7 @@
 import 'package:cogscroll/core/analytics/domains.dart';
+import 'package:cogscroll/features/games/corsi/presentation/corsi_screen.dart';
+import 'package:cogscroll/features/games/digitspan/domain/digit_span_state.dart';
+import 'package:cogscroll/features/games/digitspan/presentation/digit_span_screen.dart';
 import 'package:cogscroll/features/games/flanker/presentation/flanker_screen.dart';
 import 'package:cogscroll/features/games/gonogo/presentation/gonogo_screen.dart';
 import 'package:cogscroll/features/games/nback/presentation/nback_screen.dart';
@@ -73,6 +76,28 @@ abstract final class GameRegistry {
       domain: Domains.attentionInhibition,
       runnerCapable: true,
       build: ({runner}) => GoNoGoScreen(runner: runner),
+    ),
+    GameDescriptor(
+      id: 'corsi',
+      title: 'Spatial Grid',
+      domain: Domains.spatialReasoning,
+      runnerCapable: true,
+      build: ({runner}) => CorsiScreen(runner: runner),
+    ),
+    // Digit Span: one engine, two catalog-only entries (forward / backward).
+    GameDescriptor(
+      id: 'digitspan-fwd',
+      title: 'Digit Span',
+      domain: Domains.workingMemory,
+      runnerCapable: false,
+      build: ({runner}) => const DigitSpanScreen(mode: DigitSpanMode.forward),
+    ),
+    GameDescriptor(
+      id: 'digitspan-bwd',
+      title: 'Digit Span · Backward',
+      domain: Domains.workingMemory,
+      runnerCapable: false,
+      build: ({runner}) => const DigitSpanScreen(mode: DigitSpanMode.backward),
     ),
   ];
 

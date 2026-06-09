@@ -43,8 +43,11 @@ abstract final class CsStoreKeys {
   /// Persisted go/no-go streak (two-consecutive ±1 staircase).
   static const gngStreak = 'gng-streak';
 
-  /// Persisted digit-span best span.
-  static const digitSpan = 'digit-span';
+  /// Persisted forward digit-span best span (resume level / RoundEnd delta).
+  static const digitSpanFwd = 'digit-span-fwd';
+
+  /// Persisted backward digit-span best span (resume level / RoundEnd delta).
+  static const digitSpanBwd = 'digit-span-bwd';
 
   /// Persisted corsi best span.
   static const corsiSpan = 'corsi-span';
@@ -81,7 +84,8 @@ abstract final class CsStoreKeys {
     flankerStreak,
     gngLevel,
     gngStreak,
-    digitSpan,
+    digitSpanFwd,
+    digitSpanBwd,
     corsiSpan,
     stroopAcc,
     flankerAcc,
