@@ -85,7 +85,7 @@ class NbackPlaying extends StatelessWidget {
         return Shake(
           trigger: state.idx,
           playOnMount: true,
-          child: Shape(id: shape, outline: true),
+          child: _GhostBurst(shape: shape),
         );
       case null:
         return Pop(
@@ -93,5 +93,45 @@ class NbackPlaying extends StatelessWidget {
           child: Shape(id: shape),
         );
     }
+  }
+}
+
+/// The wrong-answer burst: the outline stimulus (kept fully visible) with two
+/// ghost copies that fade in then drift apart and out — ports the prototype's
+/// `WrongBurst` (`csGhostA`/`csGhostB`). The shake itself is applied by the
+/// caller wrapping this in a [Shake].
+class _GhostBurst extends StatelessWidget {
+  const _GhostBurst({required this.shape});
+
+  final int shape;
+
+  @override
+  Widget build(BuildContext context) {
+    return TweenAnimationBuilder<double>(
+      tween: Tween(begin: 0, end: 1),
+      duration: const Duration(milliseconds: 500),
+      curve: Curves.easeOut,
+      builder: (context, t, child) => Stack(
+        alignment: Alignment.center,
+        children: [
+          _ghost(t, const Offset(-26, -13)),
+          _ghost(t, const Offset(26, 13)),
+          child!,
+        ],
+      ),
+      child: Shape(id: shape, outline: true),
+    );
+  }
+
+  Widget _ghost(double t, Offset end) {
+    // Opacity 0 → 0.4 (at 35%) → 0, matching csGhostA/B.
+    final opacity = t < 0.35 ? 0.4 * (t / 0.35) : 0.4 * (1 - (t - 0.35) / 0.65);
+    return Opacity(
+      opacity: opacity.clamp(0, 1),
+      child: Transform.translate(
+        offset: Offset.lerp(Offset.zero, end, t)!,
+        child: Shape(id: shape, outline: true),
+      ),
+    );
   }
 }
