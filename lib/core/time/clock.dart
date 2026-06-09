@@ -1,18 +1,17 @@
-/// An injectable source of time: the current wall-clock instant and a monotonic
-/// stopwatch.
+/// An injectable source of the current wall-clock time.
 ///
-/// Inject this instead of calling [DateTime.now] or `Stopwatch()` directly so
-/// time-dependent behaviour — analytics timestamps, trial expiry, and the
-/// reaction/trails/stroop games' elapsed-time measurement — is deterministic
-/// under test: [FakeClock] fixes [now], and a `fakeAsync` zone (which both
-/// engine and widget tests run in) drives the [stopwatch].
+/// Inject this instead of calling [DateTime.now] directly so time-dependent
+/// behaviour — analytics timestamps, trial expiry, and the reaction/trails
+/// games' elapsed-time measurement (taken as [now] deltas) — is deterministic
+/// under test via [FakeClock]. (A real `Stopwatch` is not used — it reads the
+/// monotonic VM clock, which `fakeAsync` cannot control; `now()` deltas with a
+/// [FakeClock] can be driven deterministically.)
+//
+// A deliberate injection seam with SystemClock and FakeClock implementations.
+// ignore: one_member_abstracts
 abstract interface class Clock {
   /// The current wall-clock time.
   DateTime now();
-
-  /// A fresh, stopped [Stopwatch]. Inside a `fakeAsync` zone it is driven by
-  /// the fake clock, so games' elapsed-time measurement is deterministic.
-  Stopwatch stopwatch();
 }
 
 /// A [Clock] backed by the real system clock.
@@ -22,14 +21,10 @@ class SystemClock implements Clock {
 
   @override
   DateTime now() => DateTime.now();
-
-  @override
-  Stopwatch stopwatch() => Stopwatch();
 }
 
-/// A [Clock] whose [now] is fixed and advanced manually, for deterministic
-/// tests. Its [stopwatch] is a real [Stopwatch]; drive elapsed time within a
-/// `fakeAsync` zone.
+/// A [Clock] whose time is fixed and advanced manually, for deterministic
+/// tests. Game elapsed-time tests [advance] it to simulate the player reacting.
 class FakeClock implements Clock {
   /// Creates a [FakeClock] anchored at the given time.
   FakeClock(this._now);
@@ -38,9 +33,6 @@ class FakeClock implements Clock {
 
   @override
   DateTime now() => _now;
-
-  @override
-  Stopwatch stopwatch() => Stopwatch();
 
   /// Replaces the current time with [value]. A named method rather than a
   /// setter so it can't be confused with the [now] reader.
