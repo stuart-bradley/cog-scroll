@@ -284,6 +284,14 @@ file save (`cogscroll-<yyyy-mm-dd>.json`). **Import** → accept either `{data:{
 `{...}`, validate, restore, return a count; throw on a malformed payload. Round-trip must be
 unit-tested.
 
+**Entitlement & trial keys never cross the backup boundary.** `purchasedCache` and
+`trialStart` are **excluded from both export and import** (`CsStoreKeys.nonPortableKeys`), so a
+crafted or shared backup file can neither grant entitlement nor reset/extend the trial. A
+manual backup carries analytics, settings, and per-game state only — **not** trial or
+entitlement state. Entitlement stays Play-restored (§6.1); trial continuity across a reinstall
+is **Android Auto Backup**'s job (§6.2), not manual export/import. (This narrows the prototype,
+where `purchased` was a throwaway local flag with no real billing.)
+
 ---
 
 ## 5. Adaptive picker (`pick()` / `weights()` — `cs-session.jsx`)
