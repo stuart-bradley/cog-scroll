@@ -30,7 +30,7 @@ void main() {
     child: MaterialApp(home: child),
   );
 
-  /// Taps every trial until the round leaves play (feedback 800 + ISI ≤ 1000).
+  /// Taps every trial until the round leaves play (feedback 540 + ISI ≤ 1000).
   Future<void> drivePlaying(WidgetTester tester, {int maxTrials = 40}) async {
     for (var i = 0; i < maxTrials; i++) {
       if (find.byType(RoundEnd).evaluate().isNotEmpty) break;

@@ -33,6 +33,14 @@ void main() {
     });
   });
 
+  test('the feedback window covers the feedback motion (DESIGN invariant)', () {
+    // The stimulus must stay visible for the whole feedback motion: the engine
+    // blanks it after gngFeedbackWindow, and every feedback motion (bloom /
+    // pulse / shake) is clamped to gngFeedbackMotion, so the window must be at
+    // least as long. This guards against either value drifting out of step.
+    expect(gngFeedbackWindow >= gngFeedbackMotion, isTrue);
+  });
+
   group('generateGngTrial', () {
     test('a Go trial is the circle; a No-Go is the level No-Go shape', () {
       final params = goNoGoParamsForLevel(5);

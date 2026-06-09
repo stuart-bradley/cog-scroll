@@ -17,6 +17,7 @@ class Shake extends StatelessWidget {
     this.trigger,
     this.onComplete,
     this.playOnMount = false,
+    this.duration,
     super.key,
   });
 
@@ -32,6 +33,11 @@ class Shake extends StatelessWidget {
   /// Play immediately on first build (off by default for a resting wrapper).
   final bool playOnMount;
 
+  /// Override the play length (the offset curve is normalised, so a shorter
+  /// duration just plays the same jitter faster). Defaults to
+  /// [MotionDurations.shake]; fast-paced games pass a shorter window.
+  final Duration? duration;
+
   // translateX keyframes (px) at normalised timeline stops.
   static const List<double> _stops = [0, 0.14, 0.28, 0.42, 0.57, 0.71, 0.85, 1];
   static const List<double> _offsets = [0, -12, 10, -8, 6, -4, 2, 0];
@@ -39,7 +45,7 @@ class Shake extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MotionDriver(
-      duration: MotionDurations.shake,
+      duration: duration ?? MotionDurations.shake,
       trigger: trigger,
       onComplete: onComplete,
       playOnMount: playOnMount,

@@ -73,6 +73,11 @@ void main() {
     });
   });
 
+  test('flipDir swaps left and right (the incongruent flanker direction)', () {
+    expect(flipDir(FlankerDir.left), FlankerDir.right);
+    expect(flipDir(FlankerDir.right), FlankerDir.left);
+  });
+
   test('randomFlankerDir yields both directions deterministically', () {
     final dirs = [for (var i = 0; i < 20; i++) randomFlankerDir(Random(7))];
     // Same seed each call → same direction; both values are reachable.

@@ -42,12 +42,23 @@ void main() {
     expect(find.byType(FlankerArrow), findsNWidgets(5));
   });
 
+  // The three stimulus arrows (at L1) live INSIDE the feedback wrapper; the two
+  // response-button arrows are outside it. Scoping to the wrapper proves the
+  // stimulus itself stays visible through the motion (not just the buttons).
+  Finder stimulusArrows(Type wrapper) => find.descendant(
+    of: find.byType(wrapper),
+    matching: find.byType(FlankerArrow),
+  );
+
   testWidgets('a correct answer surges the arrow row (still visible)', (
     tester,
   ) async {
     await tester.pumpWidget(host(state(fb: FlankerFeedback.hit)));
     expect(find.byType(Surge), findsOneWidget);
-    expect(find.byType(FlankerArrow), findsWidgets); // stays in the tree
+    expect(
+      stimulusArrows(Surge),
+      findsNWidgets(3),
+    ); // stimulus stays in the tree
   });
 
   testWidgets('a wrong answer shakes the arrow row (still visible)', (
@@ -55,7 +66,33 @@ void main() {
   ) async {
     await tester.pumpWidget(host(state(fb: FlankerFeedback.wrong)));
     expect(find.byType(Shake), findsOneWidget);
-    expect(find.byType(FlankerArrow), findsWidgets);
+    expect(stimulusArrows(Shake), findsNWidgets(3));
+  });
+
+  testWidgets('an incongruent trial points the flankers opposite the target', (
+    tester,
+  ) async {
+    // Surge wraps the row so we can read just the stimulus arrows, in order.
+    await tester.pumpWidget(
+      host(state(fb: FlankerFeedback.hit, congruent: false)),
+    );
+    final arrows = tester
+        .widgetList<FlankerArrow>(stimulusArrows(Surge))
+        .toList();
+    expect(arrows, hasLength(3)); // flanker · target · flanker (L1)
+    expect(arrows[1].dir, FlankerDir.right); // target points right…
+    expect(arrows[0].dir, FlankerDir.left); // …flankers point the other way
+    expect(arrows[2].dir, FlankerDir.left);
+  });
+
+  testWidgets('a congruent trial points the flankers with the target', (
+    tester,
+  ) async {
+    await tester.pumpWidget(host(state(fb: FlankerFeedback.hit)));
+    final arrows = tester
+        .widgetList<FlankerArrow>(stimulusArrows(Surge))
+        .toList();
+    expect(arrows.map((a) => a.dir), everyElement(FlankerDir.right));
   });
 
   testWidgets('a higher level draws two flankers per side', (tester) async {

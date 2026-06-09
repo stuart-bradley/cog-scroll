@@ -72,6 +72,7 @@ class GoNoGoPlaying extends StatelessWidget {
         return Shake(
           trigger: state.idx,
           playOnMount: true,
+          duration: gngFeedbackMotion,
           child: Shape(id: shape, outline: true),
         );
       case null:
