@@ -1,3 +1,5 @@
+import 'package:cogscroll/core/analytics/domains.dart';
+import 'package:cogscroll/features/games/nback/presentation/nback_screen.dart';
 import 'package:cogscroll/features/games/shared/runner_context.dart';
 import 'package:flutter/widgets.dart';
 
@@ -36,11 +38,19 @@ class GameDescriptor {
   final GameBuilder build;
 }
 
-/// The registered games. Each game PR appends its descriptor(s); empty in the
-/// foundations PR.
+/// The registered games. Each game PR appends its descriptor(s).
 abstract final class GameRegistry {
-  /// Every registered game/mode, in catalog order.
-  static const List<GameDescriptor> all = [];
+  /// Every registered game/mode, in catalog order. Not `const` — each
+  /// descriptor's `build` is a closure.
+  static final List<GameDescriptor> all = [
+    GameDescriptor(
+      id: 'nback',
+      title: 'N-Back',
+      domain: Domains.workingMemory,
+      runnerCapable: true,
+      build: ({runner}) => NbackScreen(runner: runner),
+    ),
+  ];
 
   /// The descriptor with [id], or null when unknown.
   static GameDescriptor? byId(String id) {

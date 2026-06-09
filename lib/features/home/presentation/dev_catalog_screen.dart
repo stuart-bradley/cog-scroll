@@ -17,7 +17,7 @@ class DevCatalogScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const games = GameRegistry.all;
+    final games = GameRegistry.all;
     return Scaffold(
       backgroundColor: CsTokens.bg,
       body: SafeArea(
