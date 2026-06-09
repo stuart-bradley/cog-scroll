@@ -235,40 +235,51 @@ Migrations + in-memory `NativeDatabase.memory()` for tests, exactly as Tasks on 
 | `notify` | bool | daily reminder enabled. |
 | `notifyTime` | `{h, m}` | reminder time. |
 | `trialStart` | int (ms epoch) | set once on first launch. Auto-Backup-able. |
-| `nback-n`, `digit-span`, `corsi-span` | num | persisted staircase / level params. |
-| `nback-acc`, `stroop-acc`, `flanker-acc`, `gng-acc`, `switch-acc`, `trail-time`, `rt-avg` | num | **display-only** last metric, for the RoundEnd delta (not the dashboard). |
+| `nback-n`, `flanker-level`, `gng-level`, `switch-level`, `trail-a-level`, `trail-b-level`, `stroop-level` | num | persisted difficulty **level** (uniform two-consecutive ±1 staircase, §7). |
+| `nback-streak`, `flanker-streak`, `gng-streak`, `switch-streak`, `trail-a-streak`, `trail-b-streak`, `stroop-streak` | num | signed **consecutive-qualifying-round** counter driving the two-consecutive ±1 rule. |
+| `corsi-span`, `digit-span-fwd`, `digit-span-bwd` | num | persisted span **level** (span games store `best`; their consecutive counters are within-play, not persisted). |
+| `nback-acc`, `flanker-acc`, `gng-acc`, `switch-acc`, `trail-a-time`, `trail-b-time`, `stroop-interference`, `rt-avg` | num | **display-only** last metric, for the RoundEnd delta (not the dashboard). |
 | `purchasedCache` | bool | **cache** of Play entitlement, not authoritative (see §6). |
 
-### 4.3 Scoring (pure functions, ported 1:1 from `cs-data.jsx`)
+### 4.3 Scoring (pure functions; level/mode-aware)
 
-`normalize(key, raw) → 0–100`, piecewise-linear, clamped, rounded. Lower-is-better metrics
-invert here, so **"up" always means better** downstream. `nback` takes `{acc, n}`; the rest a
-number. Exact breakpoints (`[rawX, score]`, raw ascending):
+`normalize(key, raw) → 0–100`, piecewise-linear (`piece()`), clamped, rounded. A table whose
+score column **descends** as raw ascends encodes a lower-is-better metric, so **"up" always means
+better** downstream. Restored within-game difficulty (§7) makes scoring **level/mode-aware**: a
+given accuracy/time scores higher at a harder level (generalising `nback`'s long-standing
+`eff = acc + (n-2)*15`). `raw` is therefore a record for the leveled games.
 
-| key | mapping |
-|---|---|
-| `nback` | `eff = acc + (n-2)*15`; `[[40,15],[60,35],[75,58],[85,78],[100,100]]` |
-| `digit-span` | `[[3,15],[4,30],[6,55],[7,68],[8,82],[10,100]]` |
-| `corsi-span` | `[[2,10],[3,25],[5,55],[6,68],[7,82],[9,100]]` |
-| `rt-avg` (ms ↓) | `[[180,100],[220,82],[260,62],[300,45],[350,28],[450,8]]` |
-| `trail-time` (s ↓) | `[[12,100],[20,82],[30,58],[40,42],[60,22],[90,5]]` |
-| `flanker-acc` | `[[60,10],[85,35],[90,58],[95,80],[100,100]]` |
-| `gng-acc` | `[[60,10],[85,38],[92,62],[97,84],[100,100]]` |
-| `stroop-acc` | `[[50,12],[70,40],[82,60],[90,78],[100,100]]` |
-| `switch-acc` | `[[50,12],[70,40],[82,60],[90,78],[100,100]]` |
+| key | raw | mapping (`eff`/`spt`, then `piece` over `[rawX, score]`, raw ascending) |
+|---|---|---|
+| `nback` | `{acc, n}` | `eff = acc + (n-2)*15`; `[[40,15],[60,35],[75,58],[85,78],[100,100]]` |
+| `flanker-acc` | `{acc, level}` | `eff = acc + (level-1)*10`; `[[60,10],[85,35],[90,58],[95,80],[100,100]]` |
+| `gng-acc` | `{acc, level}` | `eff = acc + (level-1)*10`; `[[60,10],[85,38],[92,62],[97,84],[100,100]]` |
+| `switch-acc` | `{acc, level}` | `eff = acc + (level-1)*10`; `[[50,12],[70,40],[82,60],[90,78],[100,100]]` |
+| `stroop` (ms ↓) | `{interferenceMs, level}` | `eff = interferenceMs - (level-1)*15`; `[[40,100],[80,82],[150,55],[200,30],[300,8]]` |
+| `corsi-span` | `num` | `[[2,10],[3,25],[5,55],[6,68],[7,82],[9,100]]` |
+| `digit-span` (fwd) | `{span, mode:'fwd'}` | `[[3,15],[4,30],[6,55],[7,68],[8,82],[10,100]]` |
+| `digit-span` (bwd) | `{span, mode:'bwd'}` | `[[2,15],[3,30],[4,50],[5,68],[6,82],[8,100]]` |
+| `rt-avg` (ms ↓) | `num` | `[[180,100],[220,82],[260,62],[300,45],[350,28],[450,8]]` |
+| `trail-time` (s/target ↓, A) | `{seconds, count, mode:'a'}` | `spt = seconds/count`; `[[1.0,100],[1.7,82],[2.5,58],[3.3,42],[5.0,22],[7.5,5]]` |
+| `trail-time` (s/target ↓, B) | `{seconds, count, mode:'b'}` | `spt = seconds/count`; `[[1.8,100],[3.0,82],[4.5,58],[6.0,42],[9.0,22],[13.5,5]]` |
 
-Replicate `piece()` (linear interpolation between breakpoints, clamped to the end values).
-**These exact tables must be covered by unit tests** (endpoints, midpoints, out-of-range
-clamping).
+`eff`/`spt` are clamped into the table's range before interpolation. The lift/credit constants
+(`*10`, `*15`) and the Stroop / Trail / backward-Digit-Span tables are **tunable** but anchored to
+the product spec's published norm bands (e.g. TMT-A good <20 s, TMT-B good <45 s; Stroop
+interference good <80 ms; backward digit span good 6+). **Every table + `eff`/`spt`/mode branch
+must be unit-tested** — endpoints, midpoints, out-of-range clamping, and **level monotonicity**
+(higher level, same raw ⇒ score ≥).
 
 ### 4.4 Redo baseline (analytics reset)
 
-The prototype's `clearAnalytics()` removes these keys: `domains`, **`onboarded`**, `nback-n`,
-`nback-acc`, `digit-span`, `corsi-span`, `stroop-acc`, `flanker-acc`, `gng-acc`, `switch-acc`,
-`trail-time`, `rt-avg`. In Flutter that means: **wipe both Drift tables** + clear the
-per-game `shared_preferences` keys + clear `onboarded` (so onboarding relaunches). It does
-**not** touch `trialStart`, `purchasedCache`, `notify`, `notifyTime`, `baselinePrompted`,
-`session`. (Wiping `score_history` clears the baseline ghost naturally.)
+Redo-baseline removes: `domains`, **`onboarded`**, and **every per-game key** from §4.2 — the
+difficulty `*-level` + `*-streak` keys, the span keys (`corsi-span`, `digit-span-fwd`,
+`digit-span-bwd`), and the display-only last-metric keys (`nback-acc`, `flanker-acc`, `gng-acc`,
+`switch-acc`, `trail-a-time`, `trail-b-time`, `stroop-interference`, `rt-avg`). In Flutter that
+means: **wipe both Drift tables** + clear those `shared_preferences` keys + clear `onboarded` (so
+onboarding relaunches). It does **not** touch `trialStart`, `purchasedCache`, `notify`,
+`notifyTime`, `baselinePrompted`, `session`. (Wiping `score_history` clears the baseline ghost
+naturally.) The exact key set is `CsStoreKeys`-defined and unit-tested.
 
 ### 4.5 Export / import
 
@@ -307,8 +318,9 @@ of measured scores (`mean`, `min`, `range = max(max−min, 1)`), evaluated in th
 
 A pick shows a **focus dot** when its weight `≥ 2`. Persist the chosen set in `session`
 keyed by date; regenerate only when the date changes. Pre-baseline, the Today hero is locked
-and points at the baseline. Domain selection draws **only** from the six runner-capable
-games (§3.5).
+and points at the baseline. Domain selection draws **only** from the runner-capable engines
+(§3.5) — `reaction, flanker, gonogo, nback, corsi, trails` — where Mental Flexibility resolves
+to a Trail Making mode (A or B).
 
 ---
 
@@ -366,31 +378,74 @@ redo.
 
 ## 7. The nine games
 
-From `DESIGN.md` §6. **R** = appears in baseline/session runner (§3.5).
+**R** = appears in baseline/session runner (§3.5). **Within-game adaptive difficulty is
+restored for every game except Reaction Time** (a deliberate baseline measure). An earlier build
+draft mislabelled five games "per-round" by carrying `DESIGN.md`'s *visual* framing into the
+difficulty *system*; that is corrected here. The product-spec rule — *"every game uses a
+staircase or threshold-based difficulty system; the player always operates near their current
+limit"* — applies throughout. Colour-bound difficulty levers are reinterpreted for mono (never
+re-introducing colour); see the per-game ladders in §7.1.
 
-| Game | Domain | Mechanic | Metric (normalize key) | Adaptation | R |
+The staircase is uniform: **+1 level after two consecutive rounds above the up-threshold, −1
+after two consecutive below the down-threshold**, bounded per game, with the level (and its
+consecutive-streak) persisted (§4.2). Span games (Corsi, Digit Span) keep their within-play ±1
+on two-consecutive correct/fail and track `best`.
+
+| id (mode) | Domain | Mechanic | Metric (normalize key) | Adaptation | R |
 |---|---|---|---|---|:--:|
-| N-Back | Working Memory | tap when the shape repeats N back | accuracy % (`nback`, `{acc,n}`) | N up >85% / down <60% (cap 4) | ✅ |
-| Digit Span | Working Memory | recall digits on a keypad in order | best span (`digit-span`) | ±1 length on 2 correct / 2 fails | |
-| Spatial Grid (Corsi) | Spatial Reasoning | repeat the flashed 4×4 cell sequence | best span (`corsi-span`) | ±1 length staircase | ✅ |
-| Stroop *(shape)* | Attention & Inhibition | tap the shape you **see**, not the word drawn on it | accuracy % (`stroop-acc`) | per-round | |
-| Flanker | Sustained Attention | tap the way the **middle** arrow points | accuracy % (`flanker-acc`) | per-round | ✅ |
-| Go / No-Go | Attention & Inhibition | tap circle (Go), withhold square (No-Go) | accuracy % (`gng-acc`) | per-round | ✅ |
-| Task Switching *(shape/fill)* | Mental Flexibility | judge SHAPE or FILL — rule keeps switching | accuracy % (`switch-acc`) | per-round | |
-| Trail Making | Mental Flexibility | connect 1→12 in order, against the clock | seconds (`trail-time`) | per-round | ✅ |
-| Reaction Time | Processing Speed | tap the instant the shape appears | avg ms (`rt-avg`) | baseline measure | ✅ |
+| `nback` | Working Memory | tap when the shape repeats N back | accuracy (`nback`, `{acc,n}`) | N **start 1**, up acc>85 / down acc<60 (cap 4) | ✅ |
+| `flanker` | Sustained Attention | tap the way the **middle** arrow points | accuracy (`flanker-acc`, `{acc,level}`) | level 1→5 (§7.1) | ✅ |
+| `gonogo` | Attention & Inhibition | tap circle (Go), withhold square (No-Go) | accuracy (`gng-acc`, `{acc,level}`) | level 1→5 (§7.1) | ✅ |
+| `corsi` | Spatial Reasoning | repeat the flashed cell sequence | best span (`corsi-span`) | ±1 span; **grid grows 4×4→5×5 when span>6** | ✅ |
+| `trails-a` *(A: numbers)* | Mental Flexibility | connect 1→N in order, against the clock | s/target (`trail-time`, `{seconds,count,mode}`) | level 1→5 = count 8→25 (§7.1) | ✅ |
+| `trails-b` *(B: number/letter)* | Mental Flexibility | connect 1→A→2→B… alternating | s/target (`trail-time`, mode B) | level 1→5 = count 8→25 (§7.1) | ✅ |
+| `reaction` | Processing Speed | tap the instant the shape appears | avg ms (`rt-avg`) | none — baseline measure | ✅ |
+| `digitspan-fwd` *(forward)* | Working Memory | recall digits on a keypad, in order | best span (`digit-span`, fwd) | ±1 span on 2 correct / 2 fails | |
+| `digitspan-bwd` *(backward)* | Working Memory | recall digits **in reverse** | best span (`digit-span`, bwd) | ±1 span on 2 correct / 2 fails | |
+| `stroop` *(shape)* | Attention & Inhibition | tap the shape you **see**, not the word on it | **interference cost ms** (`stroop`, `{interferenceMs,level}`) | level 1→5 (§7.1) | |
+| `taskswitch` *(shape/fill/size)* | Mental Flexibility | judge the active rule — it keeps switching | accuracy (`switch-acc`, `{acc,level}`) | level 1→5 (§7.1) | |
 
-**Locked B&W adaptations** (the prototype is signed off — treat as decided, not as
-`DESIGN.md`'s open "validate with stakeholders" note):
+The runner-capable engines are `reaction, flanker, gonogo, nback, corsi, trails` (trails offers
+Mode A/B as two runner-pickable entries). `digitspan` (fwd/bwd), `stroop`, and `taskswitch` are
+catalog-only. `trails` and `digitspan` are each **one engine with a mode flag**, surfaced as two
+`GameRegistry` entries — eleven entries from nine engines.
 
-- **Stroop → shape-Stroop:** a word naming one shape is drawn over a *different* shape (word
-  on a white plate so it stays legible); tap the shape you see. Same read-vs-perceive
-  interference, no colour.
-- **Task Switching → shape/fill:** the two switching rules are "judge the shape
-  (circle/square)" vs "judge the fill (filled/hollow)". Same set-shifting / switch cost.
+**Locked B&W adaptations** (mono reinterpretations — never re-introduce colour):
 
-Each game keeps the prototype's full vs abbreviated (runner) lengths; see the per-game
-modules in `docs/design/` for exact trial counts and timings.
+- **Stroop → shape-Stroop:** a word naming one shape is drawn over a *different* shape (word on a
+  white plate so it stays legible); tap the shape you see. The restored difficulty escalates
+  **presentation speed, shape confusability** (circle/hexagon are harder to tell apart than
+  circle/cross), **swatch spacing**, and **option count** — the colour-bound "more similar hues"
+  lever becomes shape confusability. The metric is the original **interference cost** (mean
+  incongruent RT − mean congruent RT, congruent trials interspersed); lower is better.
+- **Task Switching → shape/fill/size:** the rules are "judge the shape (circle/square)", "judge
+  the fill (filled/hollow)", and — added so the top level can rotate **three rules** without
+  colour — "judge the size (big/small)". Levels 1–4 use shape/fill with escalating switch cadence
+  and a tightening response window; level 5 rotates all three rules.
+
+Each game keeps full vs abbreviated (runner) lengths; the §7.1 difficulty knobs override the
+prototype's fixed trial counts/timeouts. See the per-game modules in `docs/design/` for the base
+visuals, timings, and sequence generation.
+
+### 7.1 Per-game difficulty ladders (mono)
+
+All ladders use the uniform two-consecutive-rounds ±1 staircase (§7); thresholds are tuned per
+game and unit-tested.
+
+- **N-Back** — N ∈ [1,4], start 1. Up when round accuracy >85%, down when <60%.
+- **Flanker** — L1 one flanker/side, congruent · L2 one flanker/side, incongruent · L3 two
+  flankers/side, incongruent · L4 + display window 500 ms · L5 + 300 ms and flanker size = target.
+- **Go/No-Go** — L1 80/20 Go/No-Go, ISI 1000 ms · L2 ISI 700 · L3 70/30, ISI 600 · L4 60/40,
+  ISI 500 · L5 ISI 400 + a No-Go shape more visually similar to the Go shape.
+- **Corsi** — span staircase (start 3, min 2); the grid grows 4×4 → 5×5 once best span > 6.
+- **Trail Making (A & B)** — target count L1 8 · L2 12 · L3 16 · L4 20 (smaller dots) · L5 25
+  (small, crowded). Mode A connects 1→N; Mode B alternates 1→A→2→B…. Faster (lower s/target) ⇒
+  level up.
+- **Digit Span (fwd & bwd)** — span staircase; forward starts at 4 (min 3), backward at 3 (min 2).
+- **Stroop** — L1 slow presentation, distinct shapes, wide spacing, fewer options → L5 fast
+  presentation, confusable shapes, tight spacing, more options. Lower interference cost ⇒ level up.
+- **Task Switching** — L1 rule changes every 4 trials · L2 every 2 · L3 random · L4 random +
+  tighter response window · L5 three rules (shape/fill/size) rotating randomly.
 
 ---
 
