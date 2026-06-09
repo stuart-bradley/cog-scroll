@@ -11,6 +11,20 @@ void main() {
       expect(nback.runnerCapable, isTrue);
     });
 
+    test('registers Flanker as a runner-capable Sustained Attention game', () {
+      final flanker = GameRegistry.byId('flanker');
+      expect(flanker, isNotNull);
+      expect(flanker!.domain, 'Sustained Attention');
+      expect(flanker.runnerCapable, isTrue);
+    });
+
+    test('registers Go/No-Go as a runner-capable Attention game', () {
+      final gonogo = GameRegistry.byId('gonogo');
+      expect(gonogo, isNotNull);
+      expect(gonogo!.domain, 'Attention & Inhibition');
+      expect(gonogo.runnerCapable, isTrue);
+    });
+
     test('byId returns null for an unknown id', () {
       expect(GameRegistry.byId('does-not-exist'), isNull);
     });

@@ -17,6 +17,7 @@ class Pulse extends StatelessWidget {
     this.onComplete,
     this.size = 170,
     this.playOnMount = true,
+    this.duration,
     super.key,
   });
 
@@ -35,10 +36,15 @@ class Pulse extends StatelessWidget {
   /// Play immediately on first build.
   final bool playOnMount;
 
+  /// Override the play length (the painter uses normalised progress, so a
+  /// shorter duration just plays the same pulse faster). Defaults to
+  /// [MotionDurations.pulse]; fast-paced games pass a shorter window.
+  final Duration? duration;
+
   @override
   Widget build(BuildContext context) {
     return MotionDriver(
-      duration: MotionDurations.pulse,
+      duration: duration ?? MotionDurations.pulse,
       trigger: trigger,
       onComplete: onComplete,
       playOnMount: playOnMount,
