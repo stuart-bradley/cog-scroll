@@ -86,7 +86,7 @@ class TrailsEngine extends GameEngine<TrailsState> {
 
   late LevelStaircase _staircase;
   late DateTime _startedAt;
-  double? _lastSeconds;
+  double? _lastPace;
   int _badSeq = 0;
 
   static String _levelKeyFor(TrailMode mode) =>
@@ -148,7 +148,7 @@ class TrailsEngine extends GameEngine<TrailsState> {
       lowerIsBetter: true,
       streak: store.getInt(_streakKey) ?? 0,
     );
-    _lastSeconds = store.getDouble(_timeKey);
+    _lastPace = store.getDouble(_timeKey);
     _count = _countOverride ?? trailCountForLevel(_level);
     _targets = generateTrailTargets(
       count: _count,
@@ -215,20 +215,21 @@ class TrailsEngine extends GameEngine<TrailsState> {
     clearTimers();
     final seconds = _secondsSinceStart();
     _elapsed = seconds;
+    final pace = seconds / _count; // seconds per target (the scored metric)
     final playedLevel = _staircase.level;
-    final change = _staircase.recordRound(seconds / _count);
+    final change = _staircase.recordRound(pace);
     final newLevel = _staircase.level;
     _levelMsg = change > 0
         ? 'Level up · L$newLevel'
         : change < 0
         ? 'Eased to L$newLevel'
         : null;
-    final last = _lastSeconds;
+    final lastPace = _lastPace;
 
     store
       ..setInt(_levelKey, newLevel)
       ..setInt(_streakKey, _staircase.streak)
-      ..setDouble(_timeKey, seconds);
+      ..setDouble(_timeKey, pace);
     final norm = normalize('trail-time', (
       seconds: seconds,
       count: _count,
@@ -250,7 +251,7 @@ class TrailsEngine extends GameEngine<TrailsState> {
       seconds: seconds,
       count: _count,
       playedLevel: playedLevel,
-      secondsDelta: last == null ? null : seconds - last,
+      paceDelta: lastPace == null ? null : pace - lastPace,
     );
     _publish();
   }

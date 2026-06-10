@@ -76,10 +76,13 @@ abstract final class CsStoreKeys {
   /// Display-only last task-switch accuracy.
   static const switchAcc = 'switch-acc';
 
-  /// Display-only last Trail Making Mode A time (s).
+  /// Display-only last Trail Making Mode A pace (seconds per target) — the
+  /// RoundEnd delta compares pace, not raw seconds, so a level change (which
+  /// alters the target count) doesn't make a faster round read slower.
   static const trailATime = 'trail-a-time';
 
-  /// Display-only last Trail Making Mode B time (s).
+  /// Display-only last Trail Making Mode B pace (seconds per target). See
+  /// [trailATime].
   static const trailBTime = 'trail-b-time';
 
   /// Display-only last reaction-time average (ms).

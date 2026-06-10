@@ -58,8 +58,27 @@ void main() {
     expect(find.text('12.0'), findsOneWidget); // seconds hero metric
     expect(sink.calls, hasLength(1));
     expect(sink.calls.single.domain, 'Mental Flexibility');
-    expect(store.values[CsStoreKeys.trailATime], 12.0);
+    expect(store.values[CsStoreKeys.trailATime], 1.5); // pace: 12s / 8 targets
     expect(store.values[CsStoreKeys.trailALevel], 1);
+  });
+
+  testWidgets('the second round shows a pace-per-target delta', (
+    tester,
+  ) async {
+    await tester.pumpWidget(host(const TrailsScreen(mode: TrailMode.a)));
+    await tester.tap(find.text('START'));
+    await tester.pump();
+    clock.advance(const Duration(seconds: 16)); // pace 2.0 (16 / 8)
+    await connectAll(tester);
+    await tester.pumpAndSettle();
+    expect(find.byType(RoundEnd), findsOneWidget); // level stays 1, count 8
+
+    await tester.tap(find.text('AGAIN'));
+    await tester.pump();
+    clock.advance(const Duration(seconds: 8)); // pace 1.0 → 1.0 faster/target
+    await connectAll(tester);
+    await tester.pumpAndSettle();
+    expect(find.text('1.0s/target faster'), findsOneWidget);
   });
 
   testWidgets('a wrong tap shakes the dot and the round does not advance', (
@@ -120,7 +139,7 @@ void main() {
     await connectAll(tester);
     await tester.pumpAndSettle();
     expect(find.byType(RoundEnd), findsOneWidget);
-    expect(store.values[CsStoreKeys.trailBTime], 9.0);
+    expect(store.values[CsStoreKeys.trailBTime], 1.125); // pace: 9s / 8
   });
 
   testWidgets('runner mode hides the TopBar, calls onDone, no RoundEnd', (

@@ -60,8 +60,10 @@ class TrailsScreen extends ConsumerWidget {
 
   RoundData _roundData(TrailsState state) {
     final summary = state.summary!;
-    final delta = summary.secondsDelta;
-    // Sub-0.05s deltas format as "0.0s" — suppress them like the span games.
+    // Pace (s/target), not raw seconds, so the delta stays comparable when a
+    // level change alters the count. Sub-0.05 deltas format as "0.0" —
+    // suppress them like the span games (the PR4 zero-delta preference).
+    final delta = summary.paceDelta;
     final deltaText = delta?.abs().toStringAsFixed(1);
     return (
       value: summary.seconds.toStringAsFixed(1),
@@ -71,7 +73,7 @@ class TrailsScreen extends ConsumerWidget {
           ? null
           : (
               dir: delta < 0 ? DeltaDirection.up : DeltaDirection.down,
-              text: '${deltaText}s ${delta < 0 ? 'faster' : 'slower'}',
+              text: '${deltaText}s/target ${delta < 0 ? 'faster' : 'slower'}',
             ),
       levelMsg: state.levelMsg,
     );

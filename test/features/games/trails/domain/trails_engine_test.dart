@@ -68,14 +68,15 @@ void main() {
         sink.calls.single.score,
         normalize('trail-time', (seconds: 10.0, count: 4, mode: TrailMode.a)),
       );
-      expect(store.values[CsStoreKeys.trailATime], 10.0);
+      // The persisted display key stores pace (s/target): 10s / 4 = 2.5.
+      expect(store.values[CsStoreKeys.trailATime], 2.5);
       // spt 2.5 sits between the up (1.7) and down (3.3) thresholds → no move.
       expect(store.values[CsStoreKeys.trailALevel], 1);
       expect(store.values[CsStoreKeys.trailAStreak], 0);
       expect(engine.state.summary?.seconds, 10.0);
       expect(engine.state.summary?.count, 4);
       expect(engine.state.summary?.playedLevel, 1);
-      expect(engine.state.summary?.secondsDelta, isNull);
+      expect(engine.state.summary?.paceDelta, isNull);
       expect(engine.state.levelMsg, isNull);
     });
   });
@@ -182,7 +183,7 @@ void main() {
         engine.state.targets.map((t) => t.label),
         ['1', 'A', '2', 'B'],
       );
-      expect(store.values[CsStoreKeys.trailBTime], 8.0);
+      expect(store.values[CsStoreKeys.trailBTime], 2.0); // 8s / 4 targets
       expect(store.values[CsStoreKeys.trailBLevel], 1);
       expect(store.values[CsStoreKeys.trailBStreak], 1);
       expect(store.values.containsKey(CsStoreKeys.trailATime), isFalse);
@@ -217,16 +218,35 @@ void main() {
     });
   });
 
-  test('the second-play delta is seconds vs the persisted last time', () {
+  test('the second-play delta is pace (s/target) vs the persisted last', () {
     fakeAsync((async) {
       final store = FakeGameStore();
       final clock = clockAt2026();
-      final engine = build(FakeGameSink(), store, clock);
-      playRound(engine, clock, seconds: 10);
-      playRound(engine, clock, seconds: 8);
-      expect(engine.state.summary?.secondsDelta, -2.0); // faster
-      playRound(engine, clock, seconds: 11);
-      expect(engine.state.summary?.secondsDelta, 3.0); // slower
+      final engine = build(FakeGameSink(), store, clock); // count 4
+      playRound(engine, clock, seconds: 10); // pace 2.5
+      playRound(engine, clock, seconds: 8); // pace 2.0
+      expect(engine.state.summary?.paceDelta, -0.5); // faster per target
+      playRound(engine, clock, seconds: 11); // pace 2.75
+      expect(engine.state.summary?.paceDelta, closeTo(0.75, 1e-9)); // slower
+    });
+  });
+
+  test('pace delta stays comparable when a level-up changes the count', () {
+    fakeAsync((async) {
+      final store = FakeGameStore();
+      final clock = clockAt2026();
+      // Level ladder drives the count (no override), starting L1 = 8 targets.
+      final engine = build(FakeGameSink(), store, clock, count: null);
+      playRound(engine, clock, seconds: 8); // L1 count 8, pace 1.0 → streak 1
+      playRound(engine, clock, seconds: 8); // pace 1.0 → streak 2 → level up
+      expect(store.values[CsStoreKeys.trailALevel], 2);
+
+      // L2 = 12 targets. Same 1.0 s/target pace ⇒ 12s total — raw seconds
+      // would read "+4s slower", but the pace delta correctly reads no change.
+      playRound(engine, clock, seconds: 12);
+      expect(engine.state.summary?.count, 12);
+      expect(engine.state.summary?.seconds, 12.0);
+      expect(engine.state.summary?.paceDelta, closeTo(0, 1e-9));
     });
   });
 

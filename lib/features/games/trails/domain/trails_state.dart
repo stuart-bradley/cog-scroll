@@ -7,14 +7,16 @@ export 'package:cogscroll/core/scoring/metrics.dart' show TrailMode;
 /// the `trailBoardW × trailBoardH` surface).
 typedef TrailTarget = ({double x, double y, String label});
 
-/// The end-of-round summary. `secondsDelta` is `seconds - last` (negative =
-/// faster; null on the first play); the widget maps it to a `Delta`, keeping
-/// the engine Flutter-free.
+/// The end-of-round summary. `paceDelta` is this round's seconds-per-target
+/// minus the last round's (negative = faster; null on the first play). Pace,
+/// not raw seconds, so the delta stays apples-to-apples when a level change
+/// alters the target count. The widget maps it to a `Delta`, keeping the
+/// engine Flutter-free.
 typedef TrailsSummary = ({
   double seconds,
   int count,
   int playedLevel,
-  double? secondsDelta,
+  double? paceDelta,
 });
 
 /// Immutable snapshot the `TrailsEngine` republishes to its controller.
