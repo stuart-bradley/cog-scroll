@@ -32,6 +32,17 @@ void main() {
       expect(corsi.runnerCapable, isTrue);
     });
 
+    test('registers Trails A & B as runner-capable Mental Flexibility', () {
+      final a = GameRegistry.byId('trails-a');
+      final b = GameRegistry.byId('trails-b');
+      expect(a, isNotNull);
+      expect(b, isNotNull);
+      expect(a!.domain, 'Mental Flexibility');
+      expect(b!.domain, 'Mental Flexibility');
+      expect(a.runnerCapable, isTrue);
+      expect(b.runnerCapable, isTrue);
+    });
+
     test('registers Digit Span fwd & bwd as catalog-only Working Memory', () {
       final fwd = GameRegistry.byId('digitspan-fwd');
       final bwd = GameRegistry.byId('digitspan-bwd');
@@ -48,6 +59,8 @@ void main() {
       expect(runnerIds, isNot(contains('digitspan-fwd')));
       expect(runnerIds, isNot(contains('digitspan-bwd')));
       expect(runnerIds, contains('corsi'));
+      expect(runnerIds, contains('trails-a'));
+      expect(runnerIds, contains('trails-b'));
     });
 
     test('byId returns null for an unknown id', () {

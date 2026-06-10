@@ -7,6 +7,8 @@ import 'package:cogscroll/features/games/gonogo/presentation/gonogo_screen.dart'
 import 'package:cogscroll/features/games/nback/presentation/nback_screen.dart';
 import 'package:cogscroll/features/games/reaction/presentation/reaction_screen.dart';
 import 'package:cogscroll/features/games/shared/runner_context.dart';
+import 'package:cogscroll/features/games/trails/domain/trails_state.dart';
+import 'package:cogscroll/features/games/trails/presentation/trails_screen.dart';
 import 'package:flutter/widgets.dart';
 
 /// Builds a game widget, optionally driven by a [RunnerContext].
@@ -83,6 +85,21 @@ abstract final class GameRegistry {
       domain: Domains.spatialReasoning,
       runnerCapable: true,
       build: ({runner}) => CorsiScreen(runner: runner),
+    ),
+    // Trail Making: one engine, two runner-capable entries (Mode A / Mode B).
+    GameDescriptor(
+      id: 'trails-a',
+      title: 'Trail Making',
+      domain: Domains.mentalFlexibility,
+      runnerCapable: true,
+      build: ({runner}) => TrailsScreen(mode: TrailMode.a, runner: runner),
+    ),
+    GameDescriptor(
+      id: 'trails-b',
+      title: 'Trail Making · Letters',
+      domain: Domains.mentalFlexibility,
+      runnerCapable: true,
+      build: ({runner}) => TrailsScreen(mode: TrailMode.b, runner: runner),
     ),
     // Digit Span: one engine, two catalog-only entries (forward / backward).
     GameDescriptor(

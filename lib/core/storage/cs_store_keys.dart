@@ -43,6 +43,18 @@ abstract final class CsStoreKeys {
   /// Persisted go/no-go streak (two-consecutive ±1 staircase).
   static const gngStreak = 'gng-streak';
 
+  /// Persisted Trail Making Mode A staircase level (1–5).
+  static const trailALevel = 'trail-a-level';
+
+  /// Persisted Trail Making Mode A streak (two-consecutive ±1 staircase).
+  static const trailAStreak = 'trail-a-streak';
+
+  /// Persisted Trail Making Mode B staircase level (1–5).
+  static const trailBLevel = 'trail-b-level';
+
+  /// Persisted Trail Making Mode B streak (two-consecutive ±1 staircase).
+  static const trailBStreak = 'trail-b-streak';
+
   /// Persisted forward digit-span best span (resume level / RoundEnd delta).
   static const digitSpanFwd = 'digit-span-fwd';
 
@@ -64,8 +76,11 @@ abstract final class CsStoreKeys {
   /// Display-only last task-switch accuracy.
   static const switchAcc = 'switch-acc';
 
-  /// Display-only last trail-making time (s).
-  static const trailTime = 'trail-time';
+  /// Display-only last Trail Making Mode A time (s).
+  static const trailATime = 'trail-a-time';
+
+  /// Display-only last Trail Making Mode B time (s).
+  static const trailBTime = 'trail-b-time';
 
   /// Display-only last reaction-time average (ms).
   static const rtAvg = 'rt-avg';
@@ -84,6 +99,10 @@ abstract final class CsStoreKeys {
     flankerStreak,
     gngLevel,
     gngStreak,
+    trailALevel,
+    trailAStreak,
+    trailBLevel,
+    trailBStreak,
     digitSpanFwd,
     digitSpanBwd,
     corsiSpan,
@@ -91,7 +110,8 @@ abstract final class CsStoreKeys {
     flankerAcc,
     gngAcc,
     switchAcc,
-    trailTime,
+    trailATime,
+    trailBTime,
     rtAvg,
   ];
 
