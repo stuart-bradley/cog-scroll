@@ -164,7 +164,10 @@ class TrailsEngine extends GameEngine<TrailsState> {
     _startedAt = clock.now();
     _phase = GamePhase.playing;
     _publish();
-    _scheduleTick();
+    // The tick only drives the standalone TopBar readout; under a runner the
+    // TopBar is hidden, so skip the 100ms full-state republish there. Scoring
+    // is unaffected — finish() measures elapsed time from clock.now() deltas.
+    if (runner == null) _scheduleTick();
   }
 
   /// Taps the target at sequence [index]. In order → it fills (and the round

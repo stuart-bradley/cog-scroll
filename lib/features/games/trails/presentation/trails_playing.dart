@@ -16,19 +16,38 @@ const double _minHit = 44;
 /// The Trail Making play surface: the virtual board scaled to fit, an ink
 /// polyline through the connected dots, and the labelled dots — filled once
 /// done, shake-flashed (within the 360 ms window) on a wrong tap.
+///
+/// Takes only the board fields (not the full state) so the screen can keep it
+/// off the per-tick `elapsed` rebuild path.
 class TrailsPlaying extends StatelessWidget {
-  /// Creates the play UI from the engine [state].
-  const TrailsPlaying({required this.state, required this.onTapDot, super.key});
+  /// Creates the play UI from the board fields.
+  const TrailsPlaying({
+    required this.level,
+    required this.targets,
+    required this.next,
+    required this.bad,
+    required this.onTapDot,
+    super.key,
+  });
 
-  /// Current engine snapshot.
-  final TrailsState state;
+  /// Difficulty level (drives the dot radius).
+  final int level;
+
+  /// The laid-out targets, in tap order.
+  final List<TrailTarget> targets;
+
+  /// Index of the next target to tap; targets below it are done.
+  final int next;
+
+  /// Index of a briefly shake-flashed wrong tap, or null.
+  final int? bad;
 
   /// Dot-tap handler (sequence index).
   final void Function(int index) onTapDot;
 
   @override
   Widget build(BuildContext context) {
-    final radius = trailRadiusForLevel(state.level);
+    final radius = trailRadiusForLevel(level);
     final hit = max(_minHit, radius * 2);
     return Center(
       child: FittedBox(
@@ -41,15 +60,15 @@ class TrailsPlaying extends StatelessWidget {
                 size: const Size(trailBoardW, trailBoardH),
                 painter: TrailPathPainter(
                   points: [
-                    for (var i = 0; i < state.next; i++)
-                      Offset(state.targets[i].x, state.targets[i].y),
+                    for (var i = 0; i < next; i++)
+                      Offset(targets[i].x, targets[i].y),
                   ],
                 ),
               ),
-              for (var i = 0; i < state.targets.length; i++)
+              for (var i = 0; i < targets.length; i++)
                 Positioned(
-                  left: state.targets[i].x - hit / 2,
-                  top: state.targets[i].y - hit / 2,
+                  left: targets[i].x - hit / 2,
+                  top: targets[i].y - hit / 2,
                   child: _dot(i, radius: radius, hit: hit),
                 ),
             ],
@@ -60,8 +79,8 @@ class TrailsPlaying extends StatelessWidget {
   }
 
   Widget _dot(int i, {required double radius, required double hit}) {
-    final target = state.targets[i];
-    final done = i < state.next;
+    final target = targets[i];
+    final done = i < next;
     final dot = GestureDetector(
       key: ValueKey('trail-dot-$i'),
       onTap: () => onTapDot(i),
@@ -94,7 +113,7 @@ class TrailsPlaying extends StatelessWidget {
         ),
       ),
     );
-    if (state.bad != i) return dot;
+    if (bad != i) return dot;
     // The flash window is 360ms, shorter than the default shake — run the
     // motion at the window so it completes while the dot is still flagged.
     return Shake(playOnMount: true, duration: trailsBadFlash, child: dot);

@@ -81,6 +81,61 @@ void main() {
     expect(find.text('1.0s/target faster'), findsOneWidget);
   });
 
+  testWidgets('a slower second round shows a down-direction pace delta', (
+    tester,
+  ) async {
+    await tester.pumpWidget(host(const TrailsScreen(mode: TrailMode.a)));
+    await tester.tap(find.text('START'));
+    await tester.pump();
+    clock.advance(const Duration(seconds: 8)); // pace 1.0
+    await connectAll(tester);
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('AGAIN'));
+    await tester.pump();
+    clock.advance(const Duration(seconds: 16)); // pace 2.0 → 1.0 slower/target
+    await connectAll(tester);
+    await tester.pumpAndSettle();
+    expect(find.text('1.0s/target slower'), findsOneWidget);
+    expect(find.byKey(const ValueKey(DeltaDirection.down)), findsOneWidget);
+  });
+
+  testWidgets('an unchanged pace suppresses the delta line', (tester) async {
+    await tester.pumpWidget(host(const TrailsScreen(mode: TrailMode.a)));
+    await tester.tap(find.text('START'));
+    await tester.pump();
+    clock.advance(const Duration(seconds: 8)); // pace 1.0
+    await connectAll(tester);
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('AGAIN'));
+    await tester.pump();
+    clock.advance(const Duration(seconds: 8)); // pace 1.0 again → Δ 0.0
+    await connectAll(tester);
+    await tester.pumpAndSettle();
+    expect(find.byType(RoundEnd), findsOneWidget);
+    expect(find.textContaining('s/target'), findsNothing); // delta hidden
+  });
+
+  testWidgets('a level-up round surfaces the level message and sub line', (
+    tester,
+  ) async {
+    await tester.pumpWidget(host(const TrailsScreen(mode: TrailMode.a)));
+    Future<void> fastRound(String startButton) async {
+      await tester.tap(find.text(startButton));
+      await tester.pump();
+      clock.advance(const Duration(seconds: 4)); // pace 0.5 → qualifies up
+      await connectAll(tester);
+      await tester.pumpAndSettle();
+    }
+
+    await fastRound('START'); // streak 1
+    await fastRound('AGAIN'); // streak 2 → level up to L2
+
+    expect(find.textContaining('LEVEL UP'), findsOneWidget); // Label uppercases
+    expect(find.text('Level 1 · 8 targets'), findsOneWidget); // sub line
+  });
+
   testWidgets('a wrong tap shakes the dot and the round does not advance', (
     tester,
   ) async {
@@ -128,7 +183,7 @@ void main() {
     tester,
   ) async {
     await tester.pumpWidget(host(const TrailsScreen(mode: TrailMode.b)));
-    expect(find.text('TRAILS · LETTERS'), findsOneWidget);
+    expect(find.text('TRAIL MAKING · LETTERS'), findsOneWidget);
 
     await tester.tap(find.text('START'));
     await tester.pump();

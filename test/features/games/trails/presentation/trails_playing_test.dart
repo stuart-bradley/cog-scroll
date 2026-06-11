@@ -29,7 +29,13 @@ void main() {
 
   Widget host(TrailsState s, {void Function(int index)? onTap}) => MaterialApp(
     home: Scaffold(
-      body: TrailsPlaying(state: s, onTapDot: onTap ?? (_) {}),
+      body: TrailsPlaying(
+        level: s.level,
+        targets: s.targets,
+        next: s.next,
+        bad: s.bad,
+        onTapDot: onTap ?? (_) {},
+      ),
     ),
   );
 

@@ -30,36 +30,56 @@ class TrailsScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final provider = trailsControllerProvider(mode, runner);
-    final state = ref.watch(provider);
     final controller = ref.read(provider.notifier);
+    // Watch everything *except* elapsed: the 100ms tick changes only elapsed,
+    // which the `_ElapsedReadout` consumer below watches in isolation — so the
+    // board (up to 25 dots) rebuilds only on a tap, not 10x/second.
+    final view = ref.watch(
+      provider.select(
+        (s) => (
+          phase: s.phase,
+          level: s.level,
+          count: s.count,
+          targets: s.targets,
+          next: s.next,
+          bad: s.bad,
+          summary: s.summary,
+          levelMsg: s.levelMsg,
+        ),
+      ),
+    );
 
     return GameScaffold(
-      phase: state.phase,
-      title: mode == TrailMode.b ? 'Trails · Letters' : 'Trail Making',
+      phase: view.phase,
+      title: mode == TrailMode.b ? 'Trail Making · Letters' : 'Trail Making',
       runner: runner,
       onBack: () => context.pop(),
-      trailing: switch (state.phase) {
-        GamePhase.intro => Label('Level ${state.level}', color: CsTokens.fg),
-        GamePhase.playing => Label(
-          '${state.elapsed.toStringAsFixed(1)}s',
-          color: CsTokens.fg,
-        ),
+      trailing: switch (view.phase) {
+        GamePhase.intro => Label('Level ${view.level}', color: CsTokens.fg),
+        GamePhase.playing => _ElapsedReadout(mode: mode, runner: runner),
         GamePhase.round => null,
       },
       intro: TrailsIntro(
         mode: mode,
-        count: state.count,
+        count: view.count,
         onStart: controller.start,
       ),
-      playing: TrailsPlaying(state: state, onTapDot: controller.tap),
-      summary: state.summary == null ? null : _roundData(state),
+      playing: TrailsPlaying(
+        level: view.level,
+        targets: view.targets,
+        next: view.next,
+        bad: view.bad,
+        onTapDot: controller.tap,
+      ),
+      summary: view.summary == null
+          ? null
+          : _roundData(view.summary!, view.levelMsg),
       continueLabel: 'Again',
       onContinue: controller.start,
     );
   }
 
-  RoundData _roundData(TrailsState state) {
-    final summary = state.summary!;
+  RoundData _roundData(TrailsSummary summary, String? levelMsg) {
     // Pace (s/target), not raw seconds, so the delta stays comparable when a
     // level change alters the count. Sub-0.05 deltas format as "0.0" —
     // suppress them like the span games (the PR4 zero-delta preference).
@@ -75,7 +95,24 @@ class TrailsScreen extends ConsumerWidget {
               dir: delta < 0 ? DeltaDirection.up : DeltaDirection.down,
               text: '${deltaText}s/target ${delta < 0 ? 'faster' : 'slower'}',
             ),
-      levelMsg: state.levelMsg,
+      levelMsg: levelMsg,
     );
+  }
+}
+
+/// The standalone TopBar elapsed-time readout. Its own consumer watching only
+/// `elapsed`, so the 100ms tick rebuilds this Label alone — not the board.
+class _ElapsedReadout extends ConsumerWidget {
+  const _ElapsedReadout({required this.mode, required this.runner});
+
+  final TrailMode mode;
+  final RunnerContext? runner;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final elapsed = ref.watch(
+      trailsControllerProvider(mode, runner).select((s) => s.elapsed),
+    );
+    return Label('${elapsed.toStringAsFixed(1)}s', color: CsTokens.fg);
   }
 }
