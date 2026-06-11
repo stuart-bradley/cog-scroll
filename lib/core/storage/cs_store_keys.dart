@@ -64,8 +64,20 @@ abstract final class CsStoreKeys {
   /// Persisted corsi best span.
   static const corsiSpan = 'corsi-span';
 
-  /// Display-only last stroop accuracy.
-  static const stroopAcc = 'stroop-acc';
+  /// Persisted Stroop staircase level (1–5).
+  static const stroopLevel = 'stroop-level';
+
+  /// Persisted Stroop streak (two-consecutive ±1 staircase on interference).
+  static const stroopStreak = 'stroop-streak';
+
+  /// Persisted task-switch staircase level (1–5).
+  static const switchLevel = 'switch-level';
+
+  /// Persisted task-switch streak (two-consecutive ±1 staircase).
+  static const switchStreak = 'switch-streak';
+
+  /// Display-only last Stroop interference cost (ms; incongruent − congruent).
+  static const stroopInterference = 'stroop-interference';
 
   /// Display-only last flanker accuracy.
   static const flankerAcc = 'flanker-acc';
@@ -109,7 +121,11 @@ abstract final class CsStoreKeys {
     digitSpanFwd,
     digitSpanBwd,
     corsiSpan,
-    stroopAcc,
+    stroopLevel,
+    stroopStreak,
+    switchLevel,
+    switchStreak,
+    stroopInterference,
     flankerAcc,
     gngAcc,
     switchAcc,

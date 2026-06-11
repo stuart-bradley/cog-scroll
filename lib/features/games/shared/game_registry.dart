@@ -7,6 +7,8 @@ import 'package:cogscroll/features/games/gonogo/presentation/gonogo_screen.dart'
 import 'package:cogscroll/features/games/nback/presentation/nback_screen.dart';
 import 'package:cogscroll/features/games/reaction/presentation/reaction_screen.dart';
 import 'package:cogscroll/features/games/shared/runner_context.dart';
+import 'package:cogscroll/features/games/stroop/presentation/stroop_screen.dart';
+import 'package:cogscroll/features/games/taskswitch/presentation/taskswitch_screen.dart';
 import 'package:cogscroll/features/games/trails/domain/trails_state.dart';
 import 'package:cogscroll/features/games/trails/presentation/trails_screen.dart';
 import 'package:flutter/widgets.dart';
@@ -115,6 +117,22 @@ abstract final class GameRegistry {
       domain: Domains.workingMemory,
       runnerCapable: false,
       build: ({runner}) => const DigitSpanScreen(mode: DigitSpanMode.backward),
+    ),
+    // Stroop: catalog-only (interference-cost metric, not runner-driven).
+    GameDescriptor(
+      id: 'stroop',
+      title: 'Stroop',
+      domain: Domains.attentionInhibition,
+      runnerCapable: false,
+      build: ({runner}) => const StroopScreen(),
+    ),
+    // Task Switching: catalog-only (shape / fill / size rule rotation).
+    GameDescriptor(
+      id: 'taskswitch',
+      title: 'Task Switching',
+      domain: Domains.mentalFlexibility,
+      runnerCapable: false,
+      build: ({runner}) => const TaskSwitchScreen(),
     ),
   ];
 
