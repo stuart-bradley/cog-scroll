@@ -134,6 +134,52 @@ void main() {
     });
   });
 
+  test('a missed trial is excluded from the interference buckets', () {
+    fakeAsync((async) {
+      final clock = clockAt2026();
+      // Tap correctly with a fixed 300ms RT, but let every *incongruent* trial
+      // lapse. With misses excluded, the incongruent bucket stays empty…
+      final engine = build(FakeGameSink(), FakeGameStore(), clock, round: 6)
+        ..start();
+      var guard = 0;
+      final seen = <int>{};
+      while (engine.state.phase == GamePhase.playing && guard++ < 500) {
+        final st = engine.state;
+        final stim = st.stim;
+        if (st.fb == null && stim != null && !seen.contains(st.idx)) {
+          seen.add(st.idx);
+          if (stim.congruent) {
+            clock.advance(const Duration(milliseconds: 300));
+            engine.pick(stim.shape);
+            async.elapse(stroopFeedback + const Duration(milliseconds: 20));
+          } else {
+            async.elapse(const Duration(seconds: 4)); // miss the deadline
+          }
+        } else {
+          async.elapse(const Duration(milliseconds: 20));
+        }
+      }
+      // …so interference is NOT inflated. Had misses entered the incongruent
+      // bucket at the ~3000ms window, interference would be a large positive;
+      // with misses excluded the incongruent mean is 0, so it stays ≤ 0.
+      expect(engine.state.summary!.interferenceMs, lessThanOrEqualTo(0));
+    });
+  });
+
+  test('a degenerate round (an empty bucket) holds the level', () {
+    fakeAsync((async) {
+      final store = FakeGameStore()..setInt(CsStoreKeys.stroopLevel, 3);
+      final clock = clockAt2026();
+      final sink = FakeGameSink();
+      final engine = build(sink, store, clock, round: 4)..start();
+      // Miss every trial → both buckets empty → no staircase move.
+      async.elapse(const Duration(seconds: 20));
+      expect(store.values[CsStoreKeys.stroopLevel], 3); // held
+      expect(engine.state.levelMsg, isNull);
+      expect(sink.calls, hasLength(1)); // still records the round
+    });
+  });
+
   test('a missed response deadline resolves as wrong', () {
     fakeAsync((async) {
       final clock = clockAt2026();

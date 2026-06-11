@@ -149,11 +149,17 @@ class StroopEngine extends GameEngine<StroopState> {
     clearTimers();
     final stim = _stim!;
     final windowMs = stroopParamsForLevel(_level).windowMs;
-    // A miss (null) takes the full window as its response time.
-    final rt = shapeId == null
-        ? windowMs
-        : clock.now().difference(_shownAt).inMilliseconds.clamp(0, windowMs);
-    (stim.congruent ? _congruentRts : _incongruentRts).add(rt);
+    // A missed deadline (null) is NOT bucketed — it would otherwise masquerade
+    // as a huge interference RT and distort the metric (user decision). Only
+    // actual responses contribute a response time.
+    if (shapeId != null) {
+      final rt = clock
+          .now()
+          .difference(_shownAt)
+          .inMilliseconds
+          .clamp(0, windowMs);
+      (stim.congruent ? _congruentRts : _incongruentRts).add(rt);
+    }
     final correct = shapeId == stim.shape;
     _picked = shapeId;
     _fb = correct ? StroopFeedback.hit : StroopFeedback.wrong;
@@ -187,7 +193,11 @@ class StroopEngine extends GameEngine<StroopState> {
     clearTimers();
     final interference = _interference();
     final playedLevel = _staircase.level;
-    final change = _staircase.recordRound(interference);
+    // A degenerate round with an empty congruent OR incongruent bucket (e.g.
+    // every trial of one congruency was missed) has an ill-defined
+    // interference, so it must not move the staircase — hold the level.
+    final bothBuckets = _congruentRts.isNotEmpty && _incongruentRts.isNotEmpty;
+    final change = bothBuckets ? _staircase.recordRound(interference) : 0;
     final newLevel = _staircase.level;
     _levelMsg = change > 0
         ? 'Level up · L$newLevel'
