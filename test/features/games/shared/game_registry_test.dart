@@ -54,13 +54,35 @@ void main() {
       expect(bwd.runnerCapable, isFalse);
     });
 
-    test('digit-span modes are excluded from the runner subset', () {
+    test('registers Stroop as catalog-only Attention & Inhibition', () {
+      final stroop = GameRegistry.byId('stroop');
+      expect(stroop, isNotNull);
+      expect(stroop!.domain, 'Attention & Inhibition');
+      expect(stroop.runnerCapable, isFalse);
+    });
+
+    test('registers Task Switching as catalog-only Mental Flexibility', () {
+      final taskswitch = GameRegistry.byId('taskswitch');
+      expect(taskswitch, isNotNull);
+      expect(taskswitch!.domain, 'Mental Flexibility');
+      expect(taskswitch.runnerCapable, isFalse);
+    });
+
+    test('catalog-only games are excluded from the runner subset', () {
       final runnerIds = GameRegistry.runnerGames.map((g) => g.id);
       expect(runnerIds, isNot(contains('digitspan-fwd')));
       expect(runnerIds, isNot(contains('digitspan-bwd')));
+      expect(runnerIds, isNot(contains('stroop')));
+      expect(runnerIds, isNot(contains('taskswitch')));
       expect(runnerIds, contains('corsi'));
       expect(runnerIds, contains('trails-a'));
       expect(runnerIds, contains('trails-b'));
+    });
+
+    test('holds all eleven M3 entries from nine engines', () {
+      expect(GameRegistry.all, hasLength(11));
+      // reaction, flanker, gonogo, nback, corsi + trails A/B = 7 runner picks.
+      expect(GameRegistry.runnerGames, hasLength(7));
     });
 
     test('byId returns null for an unknown id', () {
