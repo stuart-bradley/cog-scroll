@@ -43,10 +43,12 @@ void main() {
     return container.read(taskSwitchControllerProvider);
   }
 
-  /// Plays the round to its RoundEnd by judging the active rule correctly,
-  /// returning the set of rules whose banner was shown.
-  Future<Set<SwitchRule>> playToEnd(WidgetTester tester) async {
-    final rulesSeen = <SwitchRule>{};
+  /// Plays the round to its RoundEnd by judging the active rule correctly. At
+  /// each trial [onTrial] is invoked with the live rule (for contract checks).
+  Future<void> playToEnd(
+    WidgetTester tester, {
+    void Function(SwitchRule rule)? onTrial,
+  }) async {
     for (var guard = 0; guard < 80; guard++) {
       if (find.byType(RoundEnd).evaluate().isNotEmpty) break;
       final st = stateOf(tester);
@@ -55,13 +57,12 @@ void main() {
         await tester.pump(const Duration(milliseconds: 50));
         continue;
       }
-      rulesSeen.add(st.rule);
+      onTrial?.call(st.rule);
       final choice = switchCorrectChoice(st.rule, stim);
       await tester.tap(find.byKey(ValueKey('switch-option-$choice')));
       await tester.pump(); // resolve
       await tester.pump(taskSwitchFeedback + const Duration(milliseconds: 20));
     }
-    return rulesSeen;
   }
 
   testWidgets('intro shows a shape legend and Begin', (tester) async {
@@ -102,14 +103,28 @@ void main() {
     expect(store.values[CsStoreKeys.switchAcc], 100);
   });
 
-  testWidgets('the rule banner rotates all three rules at L5', (tester) async {
+  testWidgets('the banner reflects the active rule throughout an L5 round', (
+    tester,
+  ) async {
+    // Deterministic: rather than asserting which rules the unseeded RNG draws,
+    // verify the banner matches whatever rule is active on every trial (the
+    // rendering contract). Full three-rule coverage lives in the seeded engine
+    // test; the size-banner UI is covered by the playing-widget test.
     store.setInt(CsStoreKeys.switchLevel, 5);
     await tester.pumpWidget(host());
     await tester.tap(find.text('BEGIN'));
     await tester.pump();
 
-    final rulesSeen = await playToEnd(tester);
-    expect(rulesSeen, containsAll(SwitchRule.values));
+    await playToEnd(
+      tester,
+      onTrial: (rule) {
+        expect(
+          find.text('JUDGE · ${rule.name.toUpperCase()}'),
+          findsOneWidget,
+          reason: 'banner should match the active rule',
+        );
+      },
+    );
   });
 
   testWidgets('a correct judgement blooms the stimulus', (tester) async {
