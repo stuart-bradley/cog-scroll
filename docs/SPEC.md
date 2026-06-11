@@ -238,7 +238,7 @@ Migrations + in-memory `NativeDatabase.memory()` for tests, exactly as Tasks on 
 | `nback-n`, `flanker-level`, `gng-level`, `switch-level`, `trail-a-level`, `trail-b-level`, `stroop-level` | num | persisted difficulty **level** (uniform two-consecutive ±1 staircase, §7). |
 | `nback-streak`, `flanker-streak`, `gng-streak`, `switch-streak`, `trail-a-streak`, `trail-b-streak`, `stroop-streak` | num | signed **consecutive-qualifying-round** counter driving the two-consecutive ±1 rule. |
 | `corsi-span`, `digit-span-fwd`, `digit-span-bwd` | num | persisted span **level** (span games store `best`; their consecutive counters are within-play, not persisted). |
-| `nback-acc`, `flanker-acc`, `gng-acc`, `switch-acc`, `trail-a-time`, `trail-b-time`, `stroop-interference`, `rt-avg` | num | **display-only** last metric, for the RoundEnd delta (not the dashboard). |
+| `nback-acc`, `flanker-acc`, `gng-acc`, `switch-acc`, `trail-a-time`, `trail-b-time`, `stroop-interference`, `rt-avg` | num | **display-only** last metric, for the RoundEnd delta (not the dashboard). `trail-a-time`/`trail-b-time` store **seconds-per-target** (pace), so the delta stays comparable across a level change that alters the target count. |
 | `purchasedCache` | bool | **cache** of Play entitlement, not authoritative (see §6). |
 
 ### 4.3 Scoring (pure functions; level/mode-aware)
