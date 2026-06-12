@@ -11,6 +11,7 @@ import 'package:cogscroll/features/dashboard/presentation/widgets/sparkline.dart
 import 'package:cogscroll/features/dashboard/presentation/widgets/trend_mark.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 /// The Progress dashboard: a six-spoke radar with a dashed baseline ghost over
 /// a per-domain list (sparkline, trend, 0–100 score). Personal trajectory only
@@ -29,10 +30,7 @@ class DashboardScreen extends ConsumerWidget {
       body: SafeArea(
         child: Column(
           children: [
-            TopBar(
-              title: 'Progress',
-              onBack: () => Navigator.maybePop(context),
-            ),
+            TopBar(title: 'Progress', onBack: () => context.pop()),
             Expanded(
               child: scores.when(
                 data: (data) =>

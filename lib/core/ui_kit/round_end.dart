@@ -2,6 +2,7 @@ import 'package:cogscroll/core/theme/app_typography.dart';
 import 'package:cogscroll/core/theme/tokens.dart';
 import 'package:cogscroll/core/ui_kit/entrance_fade.dart';
 import 'package:cogscroll/core/ui_kit/label.dart';
+import 'package:cogscroll/core/ui_kit/triangle.dart';
 import 'package:cogscroll/core/ui_kit/wide_button.dart';
 import 'package:flutter/widgets.dart';
 
@@ -118,7 +119,7 @@ class _DeltaRow extends StatelessWidget {
         CustomPaint(
           key: ValueKey(delta.dir),
           size: const Size.square(11),
-          painter: _TrianglePainter(up: delta.dir == DeltaDirection.up),
+          painter: TrianglePainter(up: delta.dir == DeltaDirection.up),
         ),
         const SizedBox(width: 6),
         Text(
@@ -133,38 +134,4 @@ class _DeltaRow extends StatelessWidget {
       ],
     );
   }
-}
-
-class _TrianglePainter extends CustomPainter {
-  const _TrianglePainter({required this.up});
-
-  final bool up;
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    canvas
-      ..save()
-      ..scale(size.width / 11);
-    final paint = Paint()
-      ..color = CsTokens.fg
-      ..isAntiAlias = true;
-    // up:   M5.5 1 l4 7 h-8 z      down: M5.5 10 l4 -7 h-8 z
-    final path = up
-        ? (Path()
-            ..moveTo(5.5, 1)
-            ..lineTo(9.5, 8)
-            ..lineTo(1.5, 8)
-            ..close())
-        : (Path()
-            ..moveTo(5.5, 10)
-            ..lineTo(9.5, 3)
-            ..lineTo(1.5, 3)
-            ..close());
-    canvas
-      ..drawPath(path, paint)
-      ..restore();
-  }
-
-  @override
-  bool shouldRepaint(_TrianglePainter oldDelegate) => oldDelegate.up != up;
 }

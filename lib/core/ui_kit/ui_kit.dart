@@ -12,4 +12,5 @@ export 'radar.dart';
 export 'round_end.dart';
 export 'shape.dart';
 export 'top_bar.dart';
+export 'triangle.dart';
 export 'wide_button.dart';

@@ -3,8 +3,31 @@ import 'package:cogscroll/core/analytics/domains.dart';
 import 'package:cogscroll/core/scoring/js_round.dart';
 import 'package:cogscroll/core/time/clock.dart';
 
-/// Improving/declining threshold (points) for [AnalyticsService.domainTrend].
+/// Improving/declining threshold (points) for [classifyTrend].
 const _stable = 4;
+
+/// Classifies a domain's [history] (oldest first) into a [DomainTrend] by
+/// averaging the most recent results against the earlier ones. Needs at least
+/// three results; "up" already means better because normalization inverts
+/// time-based metrics. Pure, so callers can classify a history they already
+/// hold without a second read.
+DomainTrend classifyTrend(List<int> history) {
+  final n = history.length;
+  if (n < 3) return (state: TrendState.none, delta: 0, n: n);
+  final half = n ~/ 2;
+  final k = half < 3 ? half : 3;
+  final recent = history.sublist(n - k);
+  final earlier = history.sublist(0, n - k);
+  final delta = jsRound(_avg(recent) - _avg(earlier));
+  final state = delta >= _stable
+      ? TrendState.improving
+      : delta <= -_stable
+      ? TrendState.declining
+      : TrendState.stable;
+  return (state: state, delta: delta, n: n);
+}
+
+double _avg(List<int> xs) => xs.fold<int>(0, (a, b) => a + b) / xs.length;
 
 /// Reads and writes the per-domain analytics that feed the dashboard and the
 /// adaptive session picker. Wraps [AnalyticsDao] and timestamps results via the
@@ -41,25 +64,7 @@ class AnalyticsService {
   /// Whether any domain has at least one measured score.
   Future<bool> hasData() async => (await _dao.readScores()).isNotEmpty;
 
-  /// Classifies [domain]'s trend by averaging the most recent results against
-  /// the earlier ones. Needs at least three results; "up" already means better
-  /// because normalization inverts time-based metrics.
-  Future<DomainTrend> domainTrend(String domain) async {
-    final h = await _dao.readHistory(domain);
-    final n = h.length;
-    if (n < 3) return (state: TrendState.none, delta: 0, n: n);
-    final half = n ~/ 2;
-    final k = half < 3 ? half : 3;
-    final recent = h.sublist(n - k);
-    final earlier = h.sublist(0, n - k);
-    final delta = jsRound(_avg(recent) - _avg(earlier));
-    final state = delta >= _stable
-        ? TrendState.improving
-        : delta <= -_stable
-        ? TrendState.declining
-        : TrendState.stable;
-    return (state: state, delta: delta, n: n);
-  }
-
-  double _avg(List<int> xs) => xs.fold<int>(0, (a, b) => a + b) / xs.length;
+  /// Classifies [domain]'s trend from its score history (see [classifyTrend]).
+  Future<DomainTrend> domainTrend(String domain) async =>
+      classifyTrend(await _dao.readHistory(domain));
 }
