@@ -1,5 +1,8 @@
+import 'package:cogscroll/core/storage/cs_store_keys.dart';
+import 'package:cogscroll/core/storage/cs_store_provider.dart';
 import 'package:cogscroll/core/theme/tokens.dart';
 import 'package:cogscroll/core/ui_kit/label.dart';
+import 'package:cogscroll/features/baseline/presentation/baseline_runner_screen.dart';
 import 'package:cogscroll/features/dashboard/presentation/dashboard_screen.dart';
 import 'package:cogscroll/features/games/shared/game_registry.dart';
 import 'package:cogscroll/features/home/presentation/dev_catalog_screen.dart';
@@ -13,16 +16,33 @@ part 'app_router.g.dart';
 ///
 /// Kept alive so navigation state survives provider rebuilds and the router is
 /// not torn down between widget-test frame pumps. Routes grow per milestone.
-/// For M3: `/` is the throwaway [DevCatalogScreen] (replaced by M6's Home) and
-/// `/game/:id` launches a registered game standalone (`runner: null`); the
-/// M5/M6 runner mounts game widgets directly rather than via this route.
+/// `/` is the throwaway [DevCatalogScreen] (replaced by M6's Home); `/game/:id`
+/// launches a registered game standalone (`runner: null`); `/baseline` is the
+/// M5 onboarding runner. A first-run `redirect` sends unprompted launches to
+/// the baseline.
 @Riverpod(keepAlive: true)
 GoRouter appRouter(Ref ref) {
   return GoRouter(
+    // First-run gate: force a launch that has never seen the baseline prompt to
+    // `/baseline`. One-directional — it never redirects *away* from an
+    // explicit `/baseline`, so once `baselinePrompted` is set (on flow open),
+    // the dev "Run baseline" link still works and there is no loop. Re-read on
+    // each navigation; `baselinePrompted` is set on entry, navigation on exit.
+    redirect: (context, state) {
+      final prompted =
+          ref.read(csStoreProvider).getBool(CsStoreKeys.baselinePrompted) ??
+          false;
+      if (!prompted && state.matchedLocation != '/baseline') return '/baseline';
+      return null;
+    },
     routes: [
       GoRoute(
         path: '/',
         builder: (context, state) => const DevCatalogScreen(),
+      ),
+      GoRoute(
+        path: '/baseline',
+        builder: (context, state) => const BaselineRunnerScreen(),
       ),
       GoRoute(
         path: '/game/:id',

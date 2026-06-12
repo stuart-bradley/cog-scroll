@@ -4,6 +4,7 @@ import 'package:cogscroll/core/ui_kit/top_bar.dart';
 import 'package:cogscroll/features/games/shared/game_engine.dart';
 import 'package:cogscroll/features/games/shared/round_data.dart';
 import 'package:cogscroll/features/games/shared/runner_context.dart';
+import 'package:cogscroll/features/games/shared/runner_header.dart';
 import 'package:flutter/material.dart';
 
 /// Shared chrome for a game screen.
@@ -62,15 +63,19 @@ class GameScaffold extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final inRunner = runner != null;
+    final r = runner;
     return Scaffold(
       backgroundColor: CsTokens.bg,
       body: SafeArea(
         child: Column(
           children: [
-            if (!inRunner)
+            // The runner draws a unified header (progress + Skip + Exit) in
+            // place of the standalone TopBar.
+            if (r != null)
+              RunnerHeader(r)
+            else
               TopBar(title: title, onBack: onBack, trailing: trailing),
-            Expanded(child: _body(inRunner: inRunner)),
+            Expanded(child: _body(inRunner: r != null)),
           ],
         ),
       ),
