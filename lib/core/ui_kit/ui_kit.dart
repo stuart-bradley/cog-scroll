@@ -8,6 +8,7 @@ export 'icons.dart';
 export 'intro.dart';
 export 'label.dart';
 export 'progress.dart';
+export 'radar.dart';
 export 'round_end.dart';
 export 'shape.dart';
 export 'top_bar.dart';

@@ -32,6 +32,17 @@ abstract final class Domains {
   ];
 }
 
+/// Short two-line labels for the radar's spoke captions (the long domain names
+/// don't fit around the hexagon). Verbatim from `docs/design/cs-data.jsx`.
+const Map<String, List<String>> kDomainShort = {
+  Domains.workingMemory: ['WORKING', 'MEMORY'],
+  Domains.processingSpeed: ['PROCESS', 'SPEED'],
+  Domains.attentionInhibition: ['ATTENTION', '& INHIB'],
+  Domains.mentalFlexibility: ['MENTAL', 'FLEX'],
+  Domains.spatialReasoning: ['SPATIAL', 'REASON'],
+  Domains.sustainedAttention: ['SUSTAIN', 'ATTN'],
+};
+
 /// The direction of a domain's recent trend, or [none] when under-measured.
 enum TrendState {
   /// Fewer than three results — not enough to classify.
