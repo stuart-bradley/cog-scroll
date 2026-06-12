@@ -12,19 +12,19 @@ import 'package:flutter/widgets.dart';
 /// `GameScaffold` renders this in place of the standalone `TopBar` whenever a
 /// [RunnerContext] is present, so every runner-capable game gets it for free.
 class RunnerHeader extends StatelessWidget {
-  /// Creates a header for the given runner [context].
-  const RunnerHeader(this.context, {super.key});
+  /// Creates a header for the given [runner] context.
+  const RunnerHeader(this.runner, {super.key});
 
   /// The active runner context (step position, label, Skip / Exit callbacks).
-  final RunnerContext context;
+  final RunnerContext runner;
 
   String _pad(int x) => x.toString().padLeft(2, '0');
 
   @override
-  Widget build(BuildContext _) {
-    final onExit = context.onExit;
-    final label = context.headerLabel;
-    final count = '${_pad(context.index + 1)} / ${_pad(context.total)}';
+  Widget build(BuildContext context) {
+    final onExit = runner.onExit;
+    final label = runner.headerLabel;
+    final count = '${_pad(runner.index + 1)} / ${_pad(runner.total)}';
     final text = label == null ? count : '$label · $count';
 
     return Padding(
@@ -45,7 +45,7 @@ class RunnerHeader extends StatelessWidget {
                 ],
               ),
               _HitTarget(
-                onTap: context.onSkip,
+                onTap: runner.onSkip,
                 child: const Label('Skip', color: CsTokens.faint),
               ),
             ],
@@ -54,15 +54,15 @@ class RunnerHeader extends StatelessWidget {
           Row(
             key: const Key('runner_progress'),
             children: [
-              for (var i = 0; i < context.total; i++) ...[
+              for (var i = 0; i < runner.total; i++) ...[
                 if (i > 0) const SizedBox(width: 6),
                 Expanded(
                   child: Container(
                     height: 3,
                     decoration: BoxDecoration(
-                      color: i < context.index
+                      color: i < runner.index
                           ? CsTokens.fg
-                          : i == context.index
+                          : i == runner.index
                           ? CsTokens.sub
                           : CsTokens.line,
                       borderRadius: BorderRadius.circular(2),

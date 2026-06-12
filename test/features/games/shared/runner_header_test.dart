@@ -1,3 +1,4 @@
+import 'package:cogscroll/core/theme/tokens.dart';
 import 'package:cogscroll/core/ui_kit/icons.dart';
 import 'package:cogscroll/features/games/shared/runner_context.dart';
 import 'package:cogscroll/features/games/shared/runner_header.dart';
@@ -22,8 +23,8 @@ void main() {
     onSkip: onSkip ?? () {},
   );
 
-  Widget host(RunnerContext context) =>
-      MaterialApp(home: Scaffold(body: RunnerHeader(context)));
+  Widget host(RunnerContext runner) =>
+      MaterialApp(home: Scaffold(body: RunnerHeader(runner)));
 
   testWidgets('renders the "<label> · NN / TT" step count', (tester) async {
     await tester.pumpWidget(host(ctx()));
@@ -62,5 +63,27 @@ void main() {
     );
     // Six bars interleaved with five 6px gaps.
     expect(progress.children.whereType<Expanded>().length, 6);
+  });
+
+  testWidgets('progress bars colour done/current/upcoming by step', (
+    tester,
+  ) async {
+    await tester.pumpWidget(host(ctx(index: 2, total: 6)));
+    final bars = tester
+        .widgetList<Container>(
+          find.descendant(
+            of: find.byKey(const Key('runner_progress')),
+            matching: find.byType(Container),
+          ),
+        )
+        .toList();
+    expect(bars.length, 6);
+    Color colourOf(int i) => (bars[i].decoration! as BoxDecoration).color!;
+    // Done (i < index) = fg, current (i == index) = sub, upcoming = line.
+    expect(colourOf(0), CsTokens.fg);
+    expect(colourOf(1), CsTokens.fg);
+    expect(colourOf(2), CsTokens.sub);
+    expect(colourOf(3), CsTokens.line);
+    expect(colourOf(5), CsTokens.line);
   });
 }
