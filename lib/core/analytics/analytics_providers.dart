@@ -23,7 +23,18 @@ Future<Map<String, int?>> domainScores(Ref ref) =>
 Future<Map<String, int?>> domainBaselines(Ref ref) =>
     ref.watch(analyticsProvider).baselineScores();
 
-/// Trend classification for a single [domain].
+/// Normalized score history (0–100, oldest first) for a single [domain].
+///
+/// Backs the dashboard sparklines: [DomainTrend] carries only the trend
+/// classification, not the underlying points.
 @riverpod
-Future<DomainTrend> domainTrend(Ref ref, String domain) =>
-    ref.watch(analyticsProvider).domainTrend(domain);
+Future<List<int>> domainHistory(Ref ref, String domain) =>
+    ref.watch(analyticsProvider).domainHistory(domain);
+
+/// Trend classification for a single [domain].
+///
+/// Derived from the cached [domainHistoryProvider] read so a row that shows
+/// both the trend and the sparkline hits the database once, not twice.
+@riverpod
+Future<DomainTrend> domainTrend(Ref ref, String domain) async =>
+    classifyTrend(await ref.watch(domainHistoryProvider(domain).future));

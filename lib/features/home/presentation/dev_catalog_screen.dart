@@ -32,8 +32,22 @@ class DevCatalogScreen extends StatelessWidget {
               ),
             ),
             const Padding(
-              padding: EdgeInsets.fromLTRB(30, 0, 30, 24),
+              padding: EdgeInsets.fromLTRB(30, 0, 30, 12),
               child: Text('BRAIN TRAINING', style: CsType.microLabel),
+            ),
+            // TEMP M4: entry to the Progress dashboard. M7's Settings screen
+            // hosts the real Settings → Progress link; remove this then.
+            Padding(
+              padding: const EdgeInsets.fromLTRB(30, 0, 30, 12),
+              child: GestureDetector(
+                behavior: HitTestBehavior.opaque,
+                onTap: () => context.push('/dashboard'),
+                child: Container(
+                  constraints: const BoxConstraints(minHeight: 44),
+                  alignment: Alignment.centerLeft,
+                  child: const Label('View Progress', color: CsTokens.fg),
+                ),
+              ),
             ),
             Expanded(
               child: games.isEmpty
