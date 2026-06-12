@@ -1,5 +1,6 @@
 import 'package:cogscroll/core/theme/tokens.dart';
 import 'package:cogscroll/core/ui_kit/label.dart';
+import 'package:cogscroll/features/dashboard/presentation/dashboard_screen.dart';
 import 'package:cogscroll/features/games/shared/game_registry.dart';
 import 'package:cogscroll/features/home/presentation/dev_catalog_screen.dart';
 import 'package:flutter/material.dart';
@@ -31,6 +32,10 @@ GoRouter appRouter(Ref ref) {
               ? const _UnknownGameScreen()
               : game.build(runner: null);
         },
+      ),
+      GoRoute(
+        path: '/dashboard',
+        builder: (context, state) => const DashboardScreen(),
       ),
     ],
   );

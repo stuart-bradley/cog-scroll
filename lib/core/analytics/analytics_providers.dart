@@ -27,3 +27,11 @@ Future<Map<String, int?>> domainBaselines(Ref ref) =>
 @riverpod
 Future<DomainTrend> domainTrend(Ref ref, String domain) =>
     ref.watch(analyticsProvider).domainTrend(domain);
+
+/// Normalized score history (0–100, oldest first) for a single [domain].
+///
+/// Backs the dashboard sparklines: [DomainTrend] carries only the trend
+/// classification, not the underlying points.
+@riverpod
+Future<List<int>> domainHistory(Ref ref, String domain) =>
+    ref.watch(analyticsProvider).domainHistory(domain);

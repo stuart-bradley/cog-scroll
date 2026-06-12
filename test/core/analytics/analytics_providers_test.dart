@@ -42,4 +42,23 @@ void main() {
     );
     expect(t.state, TrendState.none);
   });
+
+  test('domainHistoryProvider returns scores oldest-first', () async {
+    final analytics = container.read(analyticsProvider);
+    await analytics.recordResult(Domains.workingMemory, 40);
+    await analytics.recordResult(Domains.workingMemory, 60);
+    await analytics.recordResult(Domains.workingMemory, 80);
+
+    final history = await container.read(
+      domainHistoryProvider(Domains.workingMemory).future,
+    );
+    expect(history, [40, 60, 80]);
+  });
+
+  test('domainHistoryProvider is empty for an unmeasured domain', () async {
+    final history = await container.read(
+      domainHistoryProvider(Domains.spatialReasoning).future,
+    );
+    expect(history, isEmpty);
+  });
 }
