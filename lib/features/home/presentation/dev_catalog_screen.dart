@@ -35,18 +35,33 @@ class DevCatalogScreen extends StatelessWidget {
               padding: EdgeInsets.fromLTRB(30, 0, 30, 12),
               child: Text('BRAIN TRAINING', style: CsType.microLabel),
             ),
-            // TEMP M4: entry to the Progress dashboard. M7's Settings screen
-            // hosts the real Settings → Progress link; remove this then.
+            // TEMP M4/M5: entries to the Progress dashboard and the baseline
+            // flow. M6's Home auto-triggers the baseline and M7's Settings
+            // hosts the real Progress link; remove these then.
             Padding(
               padding: const EdgeInsets.fromLTRB(30, 0, 30, 12),
-              child: GestureDetector(
-                behavior: HitTestBehavior.opaque,
-                onTap: () => context.push('/dashboard'),
-                child: Container(
-                  constraints: const BoxConstraints(minHeight: 44),
-                  alignment: Alignment.centerLeft,
-                  child: const Label('View Progress', color: CsTokens.fg),
-                ),
+              child: Row(
+                children: [
+                  GestureDetector(
+                    behavior: HitTestBehavior.opaque,
+                    onTap: () => context.push('/dashboard'),
+                    child: Container(
+                      constraints: const BoxConstraints(minHeight: 44),
+                      alignment: Alignment.centerLeft,
+                      child: const Label('View Progress', color: CsTokens.fg),
+                    ),
+                  ),
+                  const SizedBox(width: 28),
+                  GestureDetector(
+                    behavior: HitTestBehavior.opaque,
+                    onTap: () => context.go('/baseline'),
+                    child: Container(
+                      constraints: const BoxConstraints(minHeight: 44),
+                      alignment: Alignment.centerLeft,
+                      child: const Label('Run baseline', color: CsTokens.fg),
+                    ),
+                  ),
+                ],
               ),
             ),
             Expanded(

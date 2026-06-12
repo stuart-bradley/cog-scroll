@@ -15,6 +15,8 @@ class RunnerContext {
     required this.focus,
     required this.onDone,
     required this.onSkip,
+    this.onExit,
+    this.headerLabel,
     this.trials,
     this.points,
   });
@@ -36,6 +38,15 @@ class RunnerContext {
 
   /// Called when the runner's Skip is used.
   final void Function() onSkip;
+
+  /// Called when the runner's Exit (✕) is used; the unified header hides the
+  /// exit affordance when this is null. A plain function type (not the Flutter
+  /// `VoidCallback`) so the engine stays Flutter-free.
+  final void Function()? onExit;
+
+  /// Header prefix shown before the `NN / TT` step count (e.g. `Baseline`,
+  /// `Today`); the header shows just the count when null.
+  final String? headerLabel;
 
   /// Abbreviated trial count; null runs the full length.
   final int? trials;

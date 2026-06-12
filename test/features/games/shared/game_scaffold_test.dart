@@ -4,6 +4,7 @@ import 'package:cogscroll/features/games/shared/game_engine.dart';
 import 'package:cogscroll/features/games/shared/game_scaffold.dart';
 import 'package:cogscroll/features/games/shared/round_data.dart';
 import 'package:cogscroll/features/games/shared/runner_context.dart';
+import 'package:cogscroll/features/games/shared/runner_header.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -62,9 +63,12 @@ void main() {
     expect(find.text('94%'), findsOneWidget);
   });
 
-  testWidgets('a runner hides the TopBar', (tester) async {
+  testWidgets('a runner replaces the TopBar with the RunnerHeader', (
+    tester,
+  ) async {
     await tester.pumpWidget(host(phase: GamePhase.intro, runner: runner()));
     expect(find.byType(TopBar), findsNothing);
+    expect(find.byType(RunnerHeader), findsOneWidget);
     expect(find.text('INTRO'), findsOneWidget);
   });
 
